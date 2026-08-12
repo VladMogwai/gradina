@@ -1,0 +1,330 @@
+@use "../../../shared/styles/tokens" as *;
+
+.panel {
+  display: flex;
+  height: 100%;
+  width: 286px;
+  flex-shrink: 0;
+  flex-direction: column;
+  border-radius: $radius-xl;
+  border: 1px solid $slate-200;
+  background: $white;
+  padding: 12px;
+  box-shadow: $shadow-sm;
+}
+
+.heading {
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $slate-700;
+}
+
+.textField {
+  width: 100%;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  color: $slate-800;
+  outline: none;
+
+  &:focus {
+    @include focus-ring($emerald-500);
+  }
+}
+
+.searchInput {
+  @extend .textField;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+}
+
+// Bug fix: this was `overflow: auto` (both axes). If any child ever grew a
+// hair wider than the panel, the container quietly picked up horizontal
+// scroll range and could end up scrolled a few px right, clipping the left
+// edge of everything inside it (including the section headings below).
+// Scoping to vertical-only removes that failure mode entirely.
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHeading {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $slate-400;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noMatches {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.footerNote {
+  margin-top: 12px;
+  border-top: 1px solid $slate-100;
+  padding-top: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: $slate-400;
+}
+
+// Built-in (non-custom) draggable rows.
+.entryRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: $radius-lg;
+  border: 1px solid $slate-200;
+  padding: 8px;
+}
+
+.entryRowEditable {
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    border-color: $slate-300;
+    background: $slate-50;
+  }
+}
+
+.entryRowDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.swatch {
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+}
+
+.zoneSwatch {
+  @extend .swatch;
+  border: 2px dashed;
+}
+
+.entryBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.entryName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $slate-800;
+}
+
+.entrySize {
+  font-size: 11px;
+  color: $slate-400;
+}
+
+// "+" add-new forms.
+.addCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: $radius-lg;
+  border: 1px dashed $slate-300;
+  padding: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.smallNumber {
+  width: 48px;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 4px 6px;
+  font-size: 0.875rem;
+  color: $slate-800;
+}
+
+.times {
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.colorInputMd {
+  height: 28px;
+  width: 32px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  border: 1px solid $slate-200;
+}
+
+// Bug fix: this button used to sit inline with the size inputs (`margin-left:
+// auto` in a single non-wrapping row). Longer translated labels (ru/ro) could
+// exceed the remaining row width and overflow past the card's edge instead of
+// wrapping. Giving it its own full-width row makes overflow impossible
+// regardless of label length.
+.addButton {
+  width: 100%;
+  border-radius: $radius-md;
+  background: $emerald-600;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $white;
+
+  &:hover:not(:disabled) {
+    background: $emerald-500;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+// Inline-editable rows for custom (user-added) entries.
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: $radius-lg;
+  border: 1px solid $slate-200;
+  padding: 8px;
+}
+
+.customZoneRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: $radius-lg;
+  border: 1px solid $slate-200;
+  padding: 8px;
+}
+
+.dragHandle {
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+}
+
+.dragHandleZone {
+  @extend .dragHandle;
+  border: 2px dashed;
+}
+
+.dragHandleEditable {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.dragHandleDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.inlineNameInput {
+  min-width: 0;
+  flex: 1;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  padding: 2px 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $slate-800;
+  outline: none;
+
+  &:hover {
+    border-color: $slate-200;
+  }
+
+  &:focus {
+    @include focus-ring($emerald-500);
+  }
+}
+
+.miniNumber {
+  width: 40px;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  color: $slate-800;
+}
+
+.miniTimes {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.miniColor {
+  height: 24px;
+  width: 28px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  border: 1px solid $slate-200;
+}
+
+.deleteButton {
+  flex-shrink: 0;
+  border-radius: $radius-sm;
+  padding: 0 6px;
+  color: $slate-400;
+
+  &:hover {
+    background: $red-50;
+    color: $red-600;
+  }
+}
+
+.zoneSecondRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 40px;
+}
+
+.miniSelect {
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  color: $slate-800;
+}
+
+.cellsLabel {
+  font-size: 11px;
+  color: $slate-400;
+}

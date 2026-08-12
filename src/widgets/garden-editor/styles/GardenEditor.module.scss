@@ -1,0 +1,22 @@
+@use "../../../shared/styles/tokens" as *;
+
+.root {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  flex-direction: column;
+  background: $slate-50;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.canvasArea {
+  min-width: 0;
+  flex: 1;
+}

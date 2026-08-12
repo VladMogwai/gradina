@@ -1,0 +1,281 @@
+@use "../../../shared/styles/tokens" as *;
+
+.panel {
+  display: flex;
+  height: 100%;
+  width: 288px;
+  flex-shrink: 0;
+  flex-direction: column;
+  border-radius: $radius-xl;
+  border: 1px solid $slate-200;
+  background: $white;
+  padding: 16px;
+  box-shadow: $shadow-sm;
+}
+
+.heading {
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $slate-700;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: $slate-400;
+}
+
+.sectionSm {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.sectionLg {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $slate-400;
+}
+
+.fieldValue {
+  font-size: 0.875rem;
+  color: $slate-700;
+}
+
+.emptyCellHint {
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid $slate-100;
+  padding-top: 12px;
+}
+
+.formHeading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $slate-400;
+}
+
+.textField {
+  width: 100%;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  color: $slate-800;
+  outline: none;
+
+  &:focus {
+    @include focus-ring($emerald-500);
+  }
+}
+
+.textarea {
+  @extend .textField;
+  resize: none;
+}
+
+.sizeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.numberInput {
+  width: 64px;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  color: $slate-800;
+}
+
+.times {
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.cellsLabel {
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.colorInputAuto {
+  margin-left: auto;
+  height: 28px;
+  width: 36px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+}
+
+.colorInput {
+  height: 28px;
+  width: 36px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $red-600;
+}
+
+.submitButton {
+  width: 100%;
+  border-radius: $radius-md;
+  background: $emerald-600;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $white;
+
+  &:hover:not(:disabled) {
+    background: $emerald-500;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.photoBox {
+  height: 112px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: $radius-lg;
+  background: $slate-100;
+}
+
+.photoImg {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.noPhotoText {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: $slate-400;
+}
+
+.photoButton {
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $slate-600;
+
+  &:hover {
+    background: $slate-50;
+  }
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.uncertainBadge {
+  margin-left: 8px;
+  margin-top: 4px;
+  display: inline-block;
+  border-radius: $radius-full;
+  background: $amber-100;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: $amber-700;
+}
+
+.waterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.waterButton {
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  background: $sky-50;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $sky-700;
+
+  &:hover {
+    background: $sky-100;
+  }
+}
+
+.muted {
+  color: $slate-400;
+}
+
+.deleteSection {
+  margin-top: auto;
+  border-top: 1px solid $slate-100;
+  padding-top: 12px;
+}
+
+.deleteButton {
+  width: 100%;
+  border-radius: $radius-md;
+  border: 1px solid $red-200;
+  background: $red-50;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $red-600;
+
+  &:hover {
+    background: $red-100;
+  }
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: $slate-500;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

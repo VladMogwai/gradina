@@ -1,0 +1,100 @@
+@use "../../../shared/styles/tokens" as *;
+
+.scrollArea {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  border-radius: $radius-xl;
+  border: 1px solid $slate-200;
+  background: $canvas-bg;
+}
+
+.canvas {
+  position: relative;
+}
+
+.gridLines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.cellHighlight {
+  pointer-events: none;
+  position: absolute;
+  border-radius: $radius-sm;
+  box-shadow: 0 0 0 2px $sky-500;
+  background: rgba($sky-500, 0.1);
+}
+
+.rulerCol {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  text-align: center;
+  font-size: 9px;
+  color: $slate-400;
+}
+
+.rulerRow {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  color: $slate-400;
+}
+
+.libraryPreview {
+  pointer-events: none;
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  border-radius: $radius-lg;
+}
+
+.libraryPreviewZone {
+  pointer-events: none;
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  border-radius: $radius-md;
+}
+
+.previewValid {
+  box-shadow: 0 0 0 2px $emerald-500;
+  background: rgba($emerald-500, 0.15);
+}
+
+.previewInvalid {
+  box-shadow: 0 0 0 2px $red-500;
+  background: rgba($red-500, 0.15);
+}
+
+.previewLabel {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: $white;
+}
+
+.zoneLibraryPreviewLabel {
+  margin: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: $radius-sm;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: $white;
+}
