@@ -1,5 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+// Deep imports instead of the "next/server" barrel: that barrel eagerly
+// requires next/dist/compiled/ua-parser-js (for the unused userAgent
+// export), which references the bare __dirname global at module scope.
+// Vercel's edge middleware packaging doesn't tree-shake unused barrel
+// exports the way a bundler does, so that reference executes on every
+// request and crashes (there's no __dirname in the edge runtime).
+import { NextResponse } from "next/dist/server/web/spec-extension/response";
+import type { NextRequest } from "next/dist/server/web/spec-extension/request";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
