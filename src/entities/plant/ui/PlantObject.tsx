@@ -60,16 +60,15 @@ export function PlantObject({
         onSelect(plant.id);
       }}
     >
-      {plant.photoUrl ? (
+      <div
+        className={styles.fallbackFill}
+        style={{
+          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+        }}
+      />
+      {plant.photoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={plant.photoUrl} alt={plant.name} className={styles.photo} draggable={false} />
-      ) : (
-        <div
-          className={styles.fallbackFill}
-          style={{
-            background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-          }}
-        />
       )}
       <div className={styles.label}>{dragging && !override!.valid ? t("invalidPlacement") : plant.name}</div>
       {debug && (

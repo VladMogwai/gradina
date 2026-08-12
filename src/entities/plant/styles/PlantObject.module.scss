@@ -62,7 +62,11 @@
   inset: 0;
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  // contain (not cover) so the whole photo always stays visible, scaled to
+  // fit the plant's current size, instead of being cropped when its aspect
+  // ratio doesn't match the tile; the color fill behind it shows through
+  // as letterboxing.
+  object-fit: contain;
 }
 
 .fallbackFill {

@@ -58,6 +58,8 @@
     "color": "Culoare",
     "addPhoto": "Adaugă foto",
     "changePhoto": "Schimbă foto",
+    "uploadingPhoto": "Se încarcă…",
+    "photoUploadFailed": "Încărcarea fotografiei a eșuat. Încearcă din nou.",
     "noPhoto": "Fără foto",
     "delete": "Șterge",
     "invalidPlacement": "Nu încape aici",

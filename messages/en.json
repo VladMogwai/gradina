@@ -58,6 +58,8 @@
     "color": "Color",
     "addPhoto": "Add photo",
     "changePhoto": "Change photo",
+    "uploadingPhoto": "Uploading…",
+    "photoUploadFailed": "Couldn't upload the photo. Try again.",
     "noPhoto": "No photo",
     "delete": "Delete",
     "invalidPlacement": "Doesn't fit here",

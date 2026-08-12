@@ -9,7 +9,9 @@ export default async function GardenEditorPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const doc = user ? await fetchGardenDoc(supabase, user.id) : null;
+  if (!user) return null; // unreachable: middleware redirects unauthenticated requests to /login
 
-  return <GardenEditor initialDoc={doc ?? { grid: DEFAULT_GRID, plants: [], zones: [] }} />;
+  const doc = await fetchGardenDoc(supabase, user.id);
+
+  return <GardenEditor userId={user.id} initialDoc={doc ?? { grid: DEFAULT_GRID, plants: [], zones: [] }} />;
 }

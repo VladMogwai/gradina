@@ -1,4 +1,4 @@
-import { fallbackColorFor, type Plant } from "@/entities/plant";
+import { deletePlantPhoto, fallbackColorFor, uploadPlantPhoto, type Plant } from "@/entities/plant";
 import {
   DEFAULT_ZONE_SIZE,
   ZONE_KIND_DEFAULT_COLOR,
@@ -7,12 +7,14 @@ import {
   type Zone,
   type ZoneKind,
 } from "@/entities/zone";
+import { createClient } from "@/shared/api/supabase/client";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import type { Selection } from "../model/types";
 import styles from "../styles/PropertiesPanel.module.scss";
 
 interface PropertiesPanelProps {
+  userId: string;
   selection: Selection;
   plants: Plant[];
   zones: Zone[];
@@ -213,6 +215,7 @@ function AddZoneForm({
 }
 
 export function PropertiesPanel({
+  userId,
   selection,
   plants,
   zones,
@@ -232,6 +235,9 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const t = useTranslations("Editor");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabaseRef = useRef(createClient());
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [uploadErrorId, setUploadErrorId] = useState<string | null>(null);
 
   function formatDate(iso: string | null): string {
     if (!iso) return t("never");
@@ -241,16 +247,22 @@ export function PropertiesPanel({
     });
   }
 
-  function handlePhotoSelected(plant: Plant, e: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoSelected(plant: Plant, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    // Prototype only: the photo lives in memory as an object URL for this
-    // tab session. In production this would be resized to ~1024px WebP,
-    // uploaded to Supabase Storage, its path saved to photoUrl, and AI
-    // species recognition would run on it.
-    if (plant.photoUrl) URL.revokeObjectURL(plant.photoUrl);
-    onPhotoChange(plant.id, URL.createObjectURL(file));
+    setUploadingId(plant.id);
+    setUploadErrorId(null);
+    const previousPhotoUrl = plant.photoUrl;
+    try {
+      const photoUrl = await uploadPlantPhoto(supabaseRef.current, userId, plant.id, file);
+      onPhotoChange(plant.id, photoUrl);
+      if (previousPhotoUrl) void deletePlantPhoto(supabaseRef.current, previousPhotoUrl);
+    } catch {
+      setUploadErrorId(plant.id);
+    } finally {
+      setUploadingId(null);
+    }
   }
 
   return (
@@ -312,9 +324,14 @@ export function PropertiesPanel({
                 className={styles.hiddenFileInput}
                 onChange={(e) => handlePhotoSelected(plant, e)}
               />
-              <button onClick={() => fileInputRef.current?.click()} className={styles.photoButton}>
-                {plant.photoUrl ? t("changePhoto") : t("addPhoto")}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingId === plant.id}
+                className={styles.photoButton}
+              >
+                {uploadingId === plant.id ? t("uploadingPhoto") : plant.photoUrl ? t("changePhoto") : t("addPhoto")}
               </button>
+              {uploadErrorId === plant.id && <p className={styles.errorText}>{t("photoUploadFailed")}</p>}
 
               <Field label={t("name")}>
                 <input

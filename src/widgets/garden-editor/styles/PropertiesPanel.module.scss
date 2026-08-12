@@ -180,7 +180,9 @@
 .photoImg {
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  // contain so the whole photo stays visible instead of being cropped
+  // when its aspect ratio doesn't match the box.
+  object-fit: contain;
 }
 
 .noPhotoText {

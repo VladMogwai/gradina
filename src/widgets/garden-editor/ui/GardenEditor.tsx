@@ -23,10 +23,11 @@ import { PropertiesPanel } from "./PropertiesPanel";
 import { Toolbar } from "./Toolbar";
 
 interface GardenEditorProps {
+  userId: string;
   initialDoc: GardenDoc;
 }
 
-export default function GardenEditor({ initialDoc }: GardenEditorProps) {
+export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) {
   const t = useTranslations("Editor");
   const { doc, commit, undo, redo, canUndo, canRedo } = useHistory(initialDoc);
   const { grid, plants, zones } = doc;
@@ -145,6 +146,7 @@ export default function GardenEditor({ initialDoc }: GardenEditorProps) {
         </div>
         {mode === "edit" && (
           <PropertiesPanel
+            userId={userId}
             selection={selection}
             plants={plants}
             zones={zones}

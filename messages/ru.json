@@ -58,6 +58,8 @@
     "color": "Цвет",
     "addPhoto": "Добавить фото",
     "changePhoto": "Заменить фото",
+    "uploadingPhoto": "Загрузка…",
+    "photoUploadFailed": "Не удалось загрузить фото. Попробуйте снова.",
     "noPhoto": "Нет фото",
     "delete": "Удалить",
     "invalidPlacement": "Не помещается",
