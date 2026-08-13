@@ -37,7 +37,12 @@ function IconButton({
   children: React.ReactNode;
 }) {
   return (
-    <button onClick={onClick} disabled={disabled} title={title} className={styles.iconButton}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={styles.iconButton}
+    >
       {children}
     </button>
   );
@@ -69,7 +74,7 @@ export function Toolbar({
       <div className={styles.row}>
         <span className={styles.title}>{t("title")}</span>
 
-        <div className={styles.gridSettings} title={t("gridSettings")}>
+        {/* <div className={styles.gridSettings} title={t("gridSettings")}>
           <span>{t("rows")}</span>
           <input
             type="number"
@@ -88,14 +93,22 @@ export function Toolbar({
             onChange={(e) => onColsChange(Number(e.target.value))}
             className={styles.numberInput}
           />
-        </div>
+        </div> */}
 
         <div className={styles.group}>
-          <IconButton onClick={() => onZoomChange(zoom - 0.1)} disabled={zoom <= ZOOM_MIN} title={t("zoomOut")}>
+          <IconButton
+            onClick={() => onZoomChange(zoom - 0.1)}
+            disabled={zoom <= ZOOM_MIN}
+            title={t("zoomOut")}
+          >
             −
           </IconButton>
           <span className={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
-          <IconButton onClick={() => onZoomChange(zoom + 0.1)} disabled={zoom >= ZOOM_MAX} title={t("zoomIn")}>
+          <IconButton
+            onClick={() => onZoomChange(zoom + 0.1)}
+            disabled={zoom >= ZOOM_MAX}
+            title={t("zoomIn")}
+          >
             +
           </IconButton>
         </div>
@@ -110,7 +123,11 @@ export function Toolbar({
         </div>
 
         <label className={styles.debugLabel}>
-          <input type="checkbox" checked={debug} onChange={(e) => onDebugChange(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={debug}
+            onChange={(e) => onDebugChange(e.target.checked)}
+          />
           {t("debug")}
         </label>
 
@@ -119,21 +136,27 @@ export function Toolbar({
             <LanguageSwitcher />
           </div>
           <LogoutButton className={styles.iconButton} />
-          {savedFlash && <span className={styles.savedFlash}>{t("saved")} ✓</span>}
+          {/* {savedFlash && <span className={styles.savedFlash}>{t("saved")} ✓</span>} */}
           <button onClick={onSave} className={styles.saveButton}>
             {t("save")}
           </button>
           <div className={styles.modeSwitch}>
             <button
               onClick={() => onModeChange("edit")}
-              className={mode === "edit" ? `${styles.modeButton} ${styles.modeButtonActive}` : styles.modeButton}
+              className={
+                mode === "edit"
+                  ? `${styles.modeButton} ${styles.modeButtonActive}`
+                  : styles.modeButton
+              }
             >
               {t("edit")}
             </button>
             <button
               onClick={() => onModeChange("preview")}
               className={
-                mode === "preview" ? `${styles.modeButton} ${styles.modeButtonActive}` : styles.modeButton
+                mode === "preview"
+                  ? `${styles.modeButton} ${styles.modeButtonActive}`
+                  : styles.modeButton
               }
             >
               {t("preview")}
