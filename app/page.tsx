@@ -1,22 +1,22 @@
-import { LogoutButton } from "@/features/auth";
-import { LanguageSwitcher } from "@/features/locale-switch";
+import { EditorShell, GardenEditor } from "@/widgets/garden-editor";
+import { fetchGardenDoc } from "@/widgets/garden-editor/api/gardenPlanApi";
+import { DEFAULT_GRID } from "@/widgets/garden-editor/config/constants";
+import { LoginScreen } from "@/widgets/login";
 import { createClient } from "@/shared/api/supabase/server";
-import { getTranslations } from "next-intl/server";
 
 export default async function Home() {
-  const t = await getTranslations("Auth");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) return <LoginScreen />;
+
+  const doc = await fetchGardenDoc(supabase, user.id);
+
   return (
-    <main style={{ padding: 24 }}>
-      <LanguageSwitcher />
-      <p>
-        {t("loggedInAs")}: {user?.email}
-      </p>
-      <LogoutButton />
-    </main>
+    <EditorShell>
+      <GardenEditor userId={user.id} initialDoc={doc ?? { grid: DEFAULT_GRID, plants: [], zones: [] }} />
+    </EditorShell>
   );
 }

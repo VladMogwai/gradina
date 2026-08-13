@@ -1,4 +1,12 @@
-import { deletePlantPhoto, fallbackColorFor, uploadPlantPhoto, type Plant } from "@/entities/plant";
+import {
+  analyzePlantPhoto,
+  deletePlantPhoto,
+  fallbackColorFor,
+  uploadPlantPhoto,
+  type Plant,
+  type PlantAnalysis,
+  type PlantAnalysisConfidence,
+} from "@/entities/plant";
 import {
   DEFAULT_ZONE_SIZE,
   ZONE_KIND_DEFAULT_COLOR,
@@ -8,7 +16,7 @@ import {
   type ZoneKind,
 } from "@/entities/zone";
 import { createClient } from "@/shared/api/supabase/client";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import type { Selection } from "../model/types";
 import styles from "../styles/PropertiesPanel.module.scss";
@@ -25,6 +33,7 @@ interface PropertiesPanelProps {
   onPlantColorChange: (id: string, color: string) => void;
   onPlantSpeciesChange: (id: string, species: string) => void;
   onPlantNotesChange: (id: string, notes: string) => void;
+  onAnalysisChange: (id: string, analysis: PlantAnalysis, analyzedAt: string) => void;
   onZoneLabelChange: (id: string, label: string) => void;
   onZoneColorChange: (id: string, color: string) => void;
   onZoneNotesChange: (id: string, notes: string) => void;
@@ -40,6 +49,12 @@ interface PropertiesPanelProps {
     height: number
   ) => boolean;
 }
+
+const CONFIDENCE_KEYS: Record<PlantAnalysisConfidence, string> = {
+  low: "confidenceLow",
+  medium: "confidenceMedium",
+  high: "confidenceHigh",
+};
 
 function occupantOf(row: number, col: number, plants: Plant[]): Plant | undefined {
   return plants.find(
@@ -226,6 +241,7 @@ export function PropertiesPanel({
   onPlantColorChange,
   onPlantSpeciesChange,
   onPlantNotesChange,
+  onAnalysisChange,
   onZoneLabelChange,
   onZoneColorChange,
   onZoneNotesChange,
@@ -234,10 +250,13 @@ export function PropertiesPanel({
   onAddZone,
 }: PropertiesPanelProps) {
   const t = useTranslations("Editor");
+  const locale = useLocale() as "ro" | "en" | "ru";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabaseRef = useRef(createClient());
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [uploadErrorId, setUploadErrorId] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [analyzeErrorId, setAnalyzeErrorId] = useState<string | null>(null);
 
   function formatDate(iso: string | null): string {
     if (!iso) return t("never");
@@ -263,6 +282,18 @@ export function PropertiesPanel({
     } finally {
       setUploadingId(null);
     }
+  }
+
+  async function handleAnalyze(plant: Plant) {
+    setAnalyzingId(plant.id);
+    setAnalyzeErrorId(null);
+    const result = await analyzePlantPhoto(plant.id);
+    if (result.ok) {
+      onAnalysisChange(plant.id, result.analysis, result.analyzedAt);
+    } else {
+      setAnalyzeErrorId(plant.id);
+    }
+    setAnalyzingId(null);
   }
 
   return (
@@ -332,6 +363,32 @@ export function PropertiesPanel({
                 {uploadingId === plant.id ? t("uploadingPhoto") : plant.photoUrl ? t("changePhoto") : t("addPhoto")}
               </button>
               {uploadErrorId === plant.id && <p className={styles.errorText}>{t("photoUploadFailed")}</p>}
+
+              {plant.photoUrl && (
+                <div className={styles.analysisSection}>
+                  <button
+                    onClick={() => handleAnalyze(plant)}
+                    disabled={analyzingId === plant.id}
+                    className={styles.analyzeButton}
+                  >
+                    {analyzingId === plant.id ? t("analyzing") : plant.analysis ? t("reanalyze") : t("analyze")}
+                  </button>
+                  {analyzeErrorId === plant.id && <p className={styles.errorText}>{t("analysisFailed")}</p>}
+
+                  {plant.analysis && (
+                    <div className={styles.analysisResult}>
+                      <div className={styles.confidenceRow}>
+                        <span className={styles.scientificName}>{plant.analysis.scientific_name}</span>
+                        <span className={styles.confidenceBadge}>{t(CONFIDENCE_KEYS[plant.analysis.confidence])}</span>
+                      </div>
+                      <p className={styles.analysisCommonName}>{plant.analysis.common_name[locale]}</p>
+                      <p className={styles.aiDisclaimer}>{t("aiDisclaimer")}</p>
+                      <Field label={t("aiDescription")}>{plant.analysis.description[locale]}</Field>
+                      <Field label={t("aiCare")}>{plant.analysis.care[locale]}</Field>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Field label={t("name")}>
                 <input

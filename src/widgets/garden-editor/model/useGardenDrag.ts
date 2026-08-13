@@ -249,6 +249,8 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
                 lastWateredAt: null,
                 careAdvice: null,
                 notes: null,
+                analyzedAt: null,
+                analysis: null,
               },
             ],
           }));

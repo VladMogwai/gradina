@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import type { Plant } from "@/entities/plant";
+import type { Plant, PlantAnalysis } from "@/entities/plant";
 import { canPlace, type GridSize } from "@/shared/lib/geometry";
 import { createId } from "@/shared/lib/id";
 import type { Selection } from "./types";
@@ -68,6 +68,13 @@ export function usePlantActions({ grid, plants, commit, setSelection }: UsePlant
     [commit]
   );
 
+  const handleAnalysisChange = useCallback(
+    (id: string, analysis: PlantAnalysis, analyzedAt: string) => {
+      commit((d) => ({ ...d, plants: d.plants.map((p) => (p.id === id ? { ...p, analysis, analyzedAt } : p)) }));
+    },
+    [commit]
+  );
+
   const handleDeletePlant = useCallback(
     (id: string) => {
       commit((d) => ({ ...d, plants: d.plants.filter((p) => p.id !== id) }));
@@ -99,6 +106,8 @@ export function usePlantActions({ grid, plants, commit, setSelection }: UsePlant
             lastWateredAt: null,
             careAdvice: null,
             notes: null,
+            analyzedAt: null,
+            analysis: null,
           },
         ],
       }));
@@ -115,6 +124,7 @@ export function usePlantActions({ grid, plants, commit, setSelection }: UsePlant
     handlePlantColorChange,
     handlePlantSpeciesChange,
     handlePlantNotesChange,
+    handleAnalysisChange,
     handleDeletePlant,
     handleAddPlant,
   };

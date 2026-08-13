@@ -5,6 +5,7 @@ import { createClient } from "@/shared/api/supabase/client";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import styles from "../styles/LoginForm.module.scss";
 
 export function LoginForm() {
   const t = useTranslations("Auth");
@@ -29,22 +30,26 @@ export function LoginForm() {
   }
 
   return (
-    <div style={{ maxWidth: 320, margin: "80px auto" }}>
-      <LanguageSwitcher />
+    <div className={styles.form}>
       <input
         type="email"
         placeholder={t("email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        className={styles.input}
       />
       <input
         type="password"
         placeholder={t("password")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        className={styles.input}
       />
-      <button onClick={signIn}>{t("signIn")}</button>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+      <button onClick={signIn} className={styles.submit}>
+        {t("signIn")}
+      </button>
+      {error && <p className={styles.error}>{error}</p>}
+      <LanguageSwitcher />
     </div>
   );
 }

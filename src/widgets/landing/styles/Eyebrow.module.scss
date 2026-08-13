@@ -1,0 +1,10 @@
+@use "../../../shared/styles/tokens" as *;
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: inherit;
+}

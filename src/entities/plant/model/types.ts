@@ -1,3 +1,22 @@
+export type PlantAnalysisConfidence = "low" | "medium" | "high";
+
+export interface PlantAnalysisLocalized {
+  ro: string;
+  en: string;
+  ru: string;
+}
+
+// Mirrors the `analysis` jsonb column exactly (including key casing) - this
+// is also the literal shape asked of Gemini, so it round-trips unchanged
+// between the model, storage, and the client.
+export interface PlantAnalysis {
+  scientific_name: string;
+  confidence: PlantAnalysisConfidence;
+  common_name: PlantAnalysisLocalized;
+  description: PlantAnalysisLocalized;
+  care: PlantAnalysisLocalized;
+}
+
 // Mirrors the `plants` table + position, per the future Supabase schema.
 export interface Plant {
   id: string;
@@ -15,6 +34,8 @@ export interface Plant {
   lastWateredAt: string | null; // ISO date
   careAdvice: string | null; // ai_content[locale].care
   notes: string | null;
+  analyzedAt: string | null; // ISO date, set on each successful AI analysis
+  analysis: PlantAnalysis | null;
 }
 
 export type PlantDraft = Omit<Plant, "id">;

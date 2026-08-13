@@ -1,0 +1,42 @@
+@use "../../../shared/styles/tokens" as *;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.input {
+  padding: 12px 16px;
+  border: 1px solid rgba($landing-ink, 0.2);
+  border-radius: $radius-md;
+  font-size: 0.9375rem;
+  color: $landing-ink;
+  background: $white;
+
+  &:focus-visible {
+    @include focus-ring($landing-sage);
+  }
+}
+
+.submit {
+  margin-top: 4px;
+  padding: 12px 20px;
+  background: $landing-ink;
+  border-radius: $radius-full;
+  color: $landing-paper;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: $landing-sage-dark;
+  }
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: $red-600;
+}

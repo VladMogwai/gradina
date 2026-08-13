@@ -1,0 +1,125 @@
+@use "../../../shared/styles/tokens" as *;
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: $landing-paper;
+  color: $landing-ink;
+  box-shadow: $shadow-sm;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 24px;
+}
+
+.logo {
+  font-family: $landing-serif;
+  font-size: 1.375rem;
+  color: inherit;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.links {
+  display: none;
+  align-items: center;
+  gap: 28px;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.75;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.actions {
+  display: none;
+  align-items: center;
+  gap: 18px;
+  font-size: 0.875rem;
+  color: inherit;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.cta {
+  display: inline-block;
+  padding: 10px 22px;
+  background: $landing-ink;
+  border: 1px solid $landing-ink;
+  border-radius: $radius-full;
+  color: $landing-paper;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: $landing-sage-dark;
+    border-color: $landing-sage-dark;
+  }
+}
+
+.menuToggle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.mobileMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 8px 24px 24px;
+  background: $landing-paper;
+  color: $landing-ink;
+  font-size: 0.9375rem;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}

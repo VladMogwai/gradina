@@ -54,6 +54,7 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
     handlePlantColorChange,
     handlePlantSpeciesChange,
     handlePlantNotesChange,
+    handleAnalysisChange,
     handleDeletePlant,
     handleAddPlant,
   } = usePlantActions({ grid, plants, commit, setSelection });
@@ -157,6 +158,7 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
             onPlantColorChange={handlePlantColorChange}
             onPlantSpeciesChange={handlePlantSpeciesChange}
             onPlantNotesChange={handlePlantNotesChange}
+            onAnalysisChange={handleAnalysisChange}
             onZoneLabelChange={handleZoneLabelChange}
             onZoneColorChange={handleZoneColorChange}
             onZoneNotesChange={handleZoneNotesChange}

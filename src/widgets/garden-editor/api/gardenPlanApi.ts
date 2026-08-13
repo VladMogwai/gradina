@@ -6,7 +6,8 @@ import type { GardenDoc } from "../model/useHistory";
 const PLANT_COLUMNS =
   "id, name, startRow:start_row, startCol:start_col, width, height, " +
   "photoUrl:photo_url, color, species, speciesUncertain:species_uncertain, " +
-  "lastWateredAt:last_watered_at, careAdvice:care_advice, notes";
+  "lastWateredAt:last_watered_at, careAdvice:care_advice, notes, " +
+  "analyzedAt:analyzed_at, analysis";
 
 const ZONE_COLUMNS = "id, kind, label, startRow:start_row, startCol:start_col, width, height, color, notes";
 

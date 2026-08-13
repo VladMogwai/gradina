@@ -37,10 +37,27 @@ $radius-xl: 12px;
 $radius-full: 9999px;
 
 $shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-md:
+  0 4px 6px -1px rgb(0 0 0 / 0.1),
+  0 2px 4px -2px rgb(0 0 0 / 0.1);
 
 @mixin focus-ring($color: $emerald-500) {
   outline: none;
   border-color: rgba($color, 0.6);
   box-shadow: 0 0 0 1px rgba($color, 0.6);
 }
+
+// Landing page palette - warm neutrals sampled from the site's own garden
+// photo/video assets (not an invented brand palette).
+$landing-paper: #ffffff;
+$landing-cream: #efe8da;
+$landing-ink: #24261f;
+$landing-ink-soft: rgba(36, 38, 31, 0.7);
+$landing-sage: #6f7a63;
+$landing-sage-dark: #4a5240;
+$landing-terracotta: #8e443b;
+
+// --font-landing-serif is set by next/font/google (Cormorant) on the
+// Landing widget's root; falls back to a system serif for glyphs it
+// doesn't cover (e.g. Cyrillic) and if the font fails to load.
+$landing-serif: var(--font-landing-serif), "Times New Roman", serif;

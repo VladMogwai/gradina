@@ -212,6 +212,77 @@
   display: none;
 }
 
+.analysisSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analyzeButton {
+  border-radius: $radius-md;
+  border: 1px solid $sky-500;
+  background: $sky-50;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $sky-700;
+
+  &:hover {
+    background: $sky-100;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.analysisResult {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: $radius-md;
+  background: $sky-50;
+  padding: 10px 12px;
+}
+
+.confidenceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scientificName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-style: italic;
+  color: $slate-700;
+}
+
+.confidenceBadge {
+  border-radius: $radius-full;
+  background: $amber-100;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: $amber-700;
+  white-space: nowrap;
+}
+
+.analysisCommonName {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: $slate-600;
+}
+
+.aiDisclaimer {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-style: italic;
+  color: $slate-400;
+}
+
 .uncertainBadge {
   margin-left: 8px;
   margin-top: 4px;

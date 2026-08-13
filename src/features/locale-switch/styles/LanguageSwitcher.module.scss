@@ -1,0 +1,38 @@
+@use "../../../shared/styles/tokens" as *;
+
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.select {
+  // Native select arrows can't be repositioned, so this replaces the
+  // browser's own arrow with an SVG chevron and moves it to the left of
+  // the text instead. Color is $landing-ink (#24261f) hardcoded since it
+  // has to be URL-encoded inline here - keep in sync if that token changes.
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 8px 14px 8px 30px;
+  border: 1px solid rgba($landing-ink, 0.25);
+  border-radius: $radius-full;
+  background-color: $white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M4 7l6 6 6-6' stroke='%2324261f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  background-size: 10px;
+  color: $landing-ink;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring($landing-sage);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}

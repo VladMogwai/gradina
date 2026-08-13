@@ -1,3 +1,4 @@
+import { LogoutButton } from "@/features/auth";
 import { LanguageSwitcher } from "@/features/locale-switch";
 import type { GridSize } from "@/shared/lib/geometry";
 import { useTranslations } from "next-intl";
@@ -117,6 +118,7 @@ export function Toolbar({
           <div className={styles.languageSwitcher}>
             <LanguageSwitcher />
           </div>
+          <LogoutButton className={styles.iconButton} />
           {savedFlash && <span className={styles.savedFlash}>{t("saved")} ✓</span>}
           <button onClick={onSave} className={styles.saveButton}>
             {t("save")}

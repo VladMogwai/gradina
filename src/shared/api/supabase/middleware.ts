@@ -32,15 +32,10 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user && !request.nextUrl.pathname.startsWith("/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+  // Refreshes the session cookie; the single route at "/" decides for
+  // itself what to render based on auth state, so there's nothing to
+  // redirect here.
+  await supabase.auth.getUser();
 
   return response;
 }
