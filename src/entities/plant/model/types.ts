@@ -1,23 +1,18 @@
-export type PlantAnalysisConfidence = "low" | "medium" | "high";
+import type { Species } from "@/entities/species";
 
-export interface PlantAnalysisLocalized {
-  ro: string;
-  en: string;
-  ru: string;
-}
+export type IdentificationConfidence = "low" | "medium" | "high";
 
-// Mirrors the `analysis` jsonb column exactly (including key casing) - this
-// is also the literal shape asked of Gemini, so it round-trips unchanged
-// between the model, storage, and the client.
-export interface PlantAnalysis {
-  scientific_name: string;
-  confidence: PlantAnalysisConfidence;
-  common_name: PlantAnalysisLocalized;
-  description: PlantAnalysisLocalized;
-  care: PlantAnalysisLocalized;
+// One row in plant_photos, with storage_path already resolved to a public
+// URL (the client never needs the raw path).
+export interface PlantPhoto {
+  id: string;
+  url: string;
+  sortOrder: number;
 }
 
 // Mirrors the `plants` table + position, per the future Supabase schema.
+// Care facts live on the shared `species` row (see entities/species), not
+// here - a plant instance only carries its own position/photos/identity.
 export interface Plant {
   id: string;
   name: string; // display_name
@@ -25,27 +20,20 @@ export interface Plant {
   startCol: number;
   width: number; // in cells
   height: number; // in cells
-  photoUrl: string | null; // photo_path (Storage)
+  // Ordered by sortOrder; photos[0] is the primary photo. Managed via
+  // direct Storage/DB writes (see plantPhotoApi.ts), not the JSON-blob
+  // autosave - add/remove take effect immediately, not on the next save.
+  photos: PlantPhoto[];
   // Fill color chosen when the plant was created/edited; falls back to a
   // name-derived color (see fallbackColorFor) only when this is null.
   color: string | null;
-  species: string | null; // ai_species
-  speciesUncertain: boolean; // ai_is_certain === false
-  lastWateredAt: string | null; // ISO date
-  careAdvice: string | null; // ai_content[locale].care
+  speciesId: string | null;
+  // This plant's own identification confidence - species-level facts
+  // (grounded in Perenual) don't have a per-instance confidence.
+  identificationConfidence: IdentificationConfidence | null;
+  species: Species | null; // joined at fetch time; null until analyzed
   notes: string | null;
-  analyzedAt: string | null; // ISO date, set on each successful AI analysis
-  analysis: PlantAnalysis | null;
+  analyzedAt: string | null; // ISO date, set on each successful identification
 }
 
 export type PlantDraft = Omit<Plant, "id">;
-
-// Prototype-only stand-in for the future "add plant via photo + AI" flow.
-export interface LibrarySpecies {
-  key: string;
-  name: string;
-  color: string;
-  defaultWidth: number;
-  defaultHeight: number;
-  custom?: boolean; // user-added via the library panel, deletable
-}

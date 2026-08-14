@@ -77,3 +77,21 @@ export function pointToCell(
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+// First row-major cell a width x height rect fits in, or null if nothing
+// fits. Used to place a new plant/zone immediately on creation.
+export function findFreeCell(
+  width: number,
+  height: number,
+  others: Placed[],
+  grid: GridSize
+): { row: number; col: number } | null {
+  for (let row = 0; row <= grid.rows - height; row++) {
+    for (let col = 0; col <= grid.cols - width; col++) {
+      if (canPlace({ startRow: row, startCol: col, width, height }, others, grid)) {
+        return { row, col };
+      }
+    }
+  }
+  return null;
+}

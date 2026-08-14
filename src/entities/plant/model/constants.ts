@@ -1,9 +1,3 @@
-import type { LibrarySpecies } from "./types";
-
-// No built-in catalog: the library starts empty and every entry is added
-// by hand via the "+" forms in the library panel.
-export const LIBRARY_SPECIES: LibrarySpecies[] = [];
-
 const FALLBACK_COLORS = [
   "#ef4444",
   "#f97316",

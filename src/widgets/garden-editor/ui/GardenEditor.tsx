@@ -1,22 +1,22 @@
 "use client";
 
-import { LIBRARY_SPECIES } from "@/entities/plant";
-import { LIBRARY_ZONES } from "@/entities/zone";
-import { clamp } from "@/shared/lib/geometry";
+import type { ZoneKind } from "@/entities/zone";
+import { findFreeCell } from "@/shared/lib/geometry";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
-import { BASE_CELL_SIZE, ZOOM_MAX, ZOOM_MIN } from "../config/constants";
+import { BASE_CELL_SIZE } from "../config/constants";
 import type { EditorMode } from "../model/types";
 import { useAutoSaveGardenPlan } from "../model/useAutoSaveGardenPlan";
-import { useCustomLibrary } from "../model/useCustomLibrary";
 import { useEditorHotkeys } from "../model/useEditorHotkeys";
 import { useEditorSelection } from "../model/useEditorSelection";
 import { useGardenDrag } from "../model/useGardenDrag";
 import { useGridResize } from "../model/useGridResize";
-import { useHistory, type GardenDoc } from "../model/useHistory";
+import { useHistory, type GardenDoc, type GardenSettings } from "../model/useHistory";
+import { usePersistedZoom } from "../model/usePersistedZoom";
 import { usePlantActions } from "../model/usePlantActions";
 import { useZoneActions } from "../model/useZoneActions";
 import styles from "../styles/GardenEditor.module.scss";
+import { GardenSettingsModal } from "./GardenSettingsModal";
 import { GridCanvas } from "./GridCanvas";
 import { PlantLibraryPanel } from "./PlantLibraryPanel";
 import { PropertiesPanel } from "./PropertiesPanel";
@@ -29,12 +29,13 @@ interface GardenEditorProps {
 
 export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) {
   const t = useTranslations("Editor");
-  const { doc, commit, undo, redo, canUndo, canRedo } = useHistory(initialDoc);
+  const { doc, commit, replacePresent, undo, redo, canUndo, canRedo } = useHistory(initialDoc);
   const { grid, plants, zones } = doc;
 
   const [mode, setMode] = useState<EditorMode>("edit");
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = usePersistedZoom();
   const [debug, setDebug] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const { status: saveStatus, saveNow } = useAutoSaveGardenPlan(doc);
 
   const { selection, setSelection, selectCell, selectPlant, selectZone, clearSelection } = useEditorSelection(
@@ -43,52 +44,68 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
   );
 
   const { canvasRef, dragState, beginMove, beginResize, beginLibraryPlantDrag, beginLibraryZoneDrag } =
-    useGardenDrag({ zoom, grid, plants, zones, commit, setSelection, t });
+    useGardenDrag({ zoom, grid, plants, zones, commit, setSelection });
 
   const { gridResizeError, handleRowsChange, handleColsChange } = useGridResize({ grid, plants, zones, commit, t });
 
   const {
-    handleWaterNow,
-    handlePhotoChange,
+    handleAddPhoto,
+    handleRemovePhoto,
     handlePlantNameChange,
     handlePlantColorChange,
-    handlePlantSpeciesChange,
     handlePlantNotesChange,
     handleAnalysisChange,
     handleDeletePlant,
     handleAddPlant,
-  } = usePlantActions({ grid, plants, commit, setSelection });
+  } = usePlantActions({ grid, plants, commit, replacePresent, setSelection });
 
-  const {
-    handleZoneLabelChange,
-    handleZoneColorChange,
-    handleZoneNotesChange,
-    handleAddZone,
-    handleDeleteZone,
-  } = useZoneActions({ grid, commit, setSelection });
-
-  const {
-    customSpecies,
-    customZoneKinds,
-    handleAddCustomSpecies,
-    handleDeleteCustomSpecies,
-    handleUpdateCustomSpecies,
-    handleAddCustomZoneKind,
-    handleDeleteCustomZoneKind,
-    handleUpdateCustomZoneKind,
-  } = useCustomLibrary();
+  const { handleZoneLabelChange, handleZoneColorChange, handleZoneNotesChange, handleAddZone, handleDeleteZone } =
+    useZoneActions({ grid, commit, setSelection });
 
   useEditorHotkeys({ undo, redo, onEscape: clearSelection });
 
   const cellSize = BASE_CELL_SIZE * zoom;
 
-  const handleZoomChange = useCallback((z: number) => {
-    setZoom(clamp(Number(z.toFixed(2)), ZOOM_MIN, ZOOM_MAX));
-  }, []);
+  const handleZoomChange = useCallback(
+    (z: number) => {
+      setZoom(z);
+    },
+    [setZoom]
+  );
 
-  const handleZoomDelta = useCallback((deltaY: number) => {
-    setZoom((z) => clamp(Number((z - deltaY * 0.001).toFixed(2)), ZOOM_MIN, ZOOM_MAX));
-  }, []);
+  const handleZoomDelta = useCallback(
+    (deltaY: number) => {
+      setZoom((z) => z - deltaY * 0.001);
+    },
+    [setZoom]
+  );
+
+  // Modal submit handlers: the form collects name/color/size, this picks
+  // where it lands (first free cell) and actually creates it.
+  const handleAddPlantSubmit = useCallback(
+    (name: string, color: string, width: number, height: number) => {
+      const free = findFreeCell(width, height, plants, grid);
+      if (!free) return;
+      handleAddPlant(free.row, free.col, name, width, height, color);
+    },
+    [plants, grid, handleAddPlant]
+  );
+
+  const handleAddZoneSubmit = useCallback(
+    (kind: ZoneKind, label: string, color: string, width: number, height: number) => {
+      const free = findFreeCell(width, height, [], grid);
+      if (!free) return;
+      handleAddZone(free.row, free.col, kind, label, color, width, height);
+    },
+    [grid, handleAddZone]
+  );
+
+  const handleSettingsChange = useCallback(
+    (patch: Partial<GardenSettings>) => {
+      commit((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
+    },
+    [commit]
+  );
 
   return (
     <div className={styles.root}>
@@ -105,8 +122,7 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
         onRedo={redo}
         mode={mode}
         onModeChange={setMode}
-        debug={debug}
-        onDebugChange={setDebug}
+        onOpenSettings={() => setSettingsModalOpen(true)}
         onSave={saveNow}
         savedFlash={saveStatus === "saved"}
       />
@@ -114,16 +130,14 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
         {mode === "edit" && (
           <PlantLibraryPanel
             editable={mode === "edit"}
-            species={[...LIBRARY_SPECIES, ...customSpecies]}
-            zoneKinds={[...LIBRARY_ZONES, ...customZoneKinds]}
+            plants={plants}
+            zones={zones}
             onBeginPlantDrag={beginLibraryPlantDrag}
             onBeginZoneDrag={beginLibraryZoneDrag}
-            onAddCustomSpecies={handleAddCustomSpecies}
-            onDeleteCustomSpecies={handleDeleteCustomSpecies}
-            onUpdateCustomSpecies={handleUpdateCustomSpecies}
-            onAddCustomZoneKind={handleAddCustomZoneKind}
-            onDeleteCustomZoneKind={handleDeleteCustomZoneKind}
-            onUpdateCustomZoneKind={handleUpdateCustomZoneKind}
+            onAddPlant={handleAddPlantSubmit}
+            onAddZone={handleAddZoneSubmit}
+            onDeletePlant={handleDeletePlant}
+            onDeleteZone={handleDeleteZone}
           />
         )}
         <div className={styles.canvasArea}>
@@ -151,23 +165,29 @@ export default function GardenEditor({ userId, initialDoc }: GardenEditorProps) 
             selection={selection}
             plants={plants}
             zones={zones}
-            onWaterNow={handleWaterNow}
+            gardenSettings={doc.settings}
+            onClose={clearSelection}
             onDeletePlant={handleDeletePlant}
-            onPhotoChange={handlePhotoChange}
+            onSaveNow={saveNow}
+            onAddPhoto={handleAddPhoto}
+            onRemovePhoto={handleRemovePhoto}
             onPlantNameChange={handlePlantNameChange}
             onPlantColorChange={handlePlantColorChange}
-            onPlantSpeciesChange={handlePlantSpeciesChange}
             onPlantNotesChange={handlePlantNotesChange}
             onAnalysisChange={handleAnalysisChange}
             onZoneLabelChange={handleZoneLabelChange}
             onZoneColorChange={handleZoneColorChange}
             onZoneNotesChange={handleZoneNotesChange}
             onDeleteZone={handleDeleteZone}
-            onAddPlant={handleAddPlant}
-            onAddZone={handleAddZone}
           />
         )}
       </div>
+      <GardenSettingsModal
+        open={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        settings={doc.settings}
+        onSettingsChange={handleSettingsChange}
+      />
     </div>
   );
 }

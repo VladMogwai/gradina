@@ -1,6 +1,3 @@
-import type { LibrarySpecies } from "@/entities/plant";
-import type { LibraryZoneKind } from "@/entities/zone";
-
 interface MoveDrag {
   type: "move";
   target: "plant" | "zone";
@@ -25,9 +22,14 @@ interface ResizeDrag {
   valid: boolean;
 }
 
+// Dragging a row out of the Library panel relocates that exact plant/zone
+// (the row IS the placed item, not a stamp for a new one) - so this only
+// needs the id plus its fixed size for the drop-validity check.
 interface LibraryPlantDrag {
   type: "library-plant";
-  species: LibrarySpecies;
+  id: string;
+  width: number;
+  height: number;
   candidateRow: number | null;
   candidateCol: number | null;
   valid: boolean;
@@ -35,7 +37,9 @@ interface LibraryPlantDrag {
 
 interface LibraryZoneDrag {
   type: "library-zone";
-  zoneKind: LibraryZoneKind;
+  id: string;
+  width: number;
+  height: number;
   candidateRow: number | null;
   candidateCol: number | null;
   valid: boolean;

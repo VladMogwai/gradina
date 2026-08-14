@@ -1,9 +1,8 @@
 "use client";
 
-import type { LibrarySpecies, Plant } from "@/entities/plant";
-import { zoneKindLibraryLabel, type LibraryZoneKind, type Zone } from "@/entities/zone";
+import type { Plant } from "@/entities/plant";
+import type { Zone } from "@/entities/zone";
 import { canPlace, pointToCell, type GridSize } from "@/shared/lib/geometry";
-import { createId } from "@/shared/lib/id";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BASE_CELL_SIZE } from "../config/constants";
 import type { DragState } from "./dragTypes";
@@ -17,14 +16,13 @@ interface UseGardenDragParams {
   zones: Zone[];
   commit: (updater: (doc: GardenDoc) => GardenDoc) => void;
   setSelection: (selection: Selection) => void;
-  t: (key: string) => string;
 }
 
 // Owns the whole pointer drag lifecycle for moving/resizing plants and
-// zones, and for dropping new ones from the library. Listeners are
+// zones, and for relocating one out of the Library panel. Listeners are
 // attached to window (not the canvas) so movement/release outside the
 // canvas is still tracked, Figma-style.
-export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection, t }: UseGardenDragParams) {
+export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection }: UseGardenDragParams) {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -32,7 +30,6 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
   // (subscribed once per drag) always read fresh values without needing to
   // resubscribe on every state change.
   const latest = useRef({ zoom, grid, plants, zones });
-  const tRef = useRef(t);
   const isDragging = dragState !== null;
 
   useEffect(() => {
@@ -42,10 +39,6 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
   useEffect(() => {
     latest.current = { zoom, grid, plants, zones };
   }, [zoom, grid, plants, zones]);
-
-  useEffect(() => {
-    tRef.current = t;
-  }, [t]);
 
   const beginMove = useCallback(
     (id: string, target: "plant" | "zone", e: React.PointerEvent) => {
@@ -93,25 +86,39 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
     [setSelection]
   );
 
-  const beginLibraryPlantDrag = useCallback((species: LibrarySpecies) => {
+  // A Library row IS the plant/zone (same id), so dragging one out of the
+  // panel relocates it - same end state as dragging it on the canvas,
+  // just starting from outside the grid, so it tracks the pointer
+  // absolutely (pointToCell) rather than move's relative offset.
+  const beginLibraryPlantDrag = useCallback((id: string) => {
+    const item = latest.current.plants.find((p) => p.id === id);
+    if (!item) return;
+    setSelection({ kind: "plant", id });
     setDragState({
       type: "library-plant",
-      species,
+      id,
+      width: item.width,
+      height: item.height,
       candidateRow: null,
       candidateCol: null,
       valid: false,
     });
-  }, []);
+  }, [setSelection]);
 
-  const beginLibraryZoneDrag = useCallback((zoneKind: LibraryZoneKind) => {
+  const beginLibraryZoneDrag = useCallback((id: string) => {
+    const item = latest.current.zones.find((z) => z.id === id);
+    if (!item) return;
+    setSelection({ kind: "zone", id });
     setDragState({
       type: "library-zone",
-      zoneKind,
+      id,
+      width: item.width,
+      height: item.height,
       candidateRow: null,
       candidateCol: null,
       valid: false,
     });
-  }, []);
+  }, [setSelection]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -169,18 +176,15 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
         const { row, col } = pointToCell(e.clientX, e.clientY, rect, cs);
         if (ds.type === "library-plant") {
           const valid = canPlace(
-            { startRow: row, startCol: col, width: ds.species.defaultWidth, height: ds.species.defaultHeight },
+            { startRow: row, startCol: col, width: ds.width, height: ds.height },
             plants,
-            grid
+            grid,
+            ds.id
           );
           return { ...ds, candidateRow: row, candidateCol: col, valid };
         }
         // Zones may freely overlap other zones.
-        const valid = canPlace(
-          { startRow: row, startCol: col, width: ds.zoneKind.defaultWidth, height: ds.zoneKind.defaultHeight },
-          [],
-          grid
-        );
+        const valid = canPlace({ startRow: row, startCol: col, width: ds.width, height: ds.height }, [], grid);
         return { ...ds, candidateRow: row, candidateCol: col, valid };
       });
     }
@@ -228,54 +232,22 @@ export function useGardenDrag({ zoom, grid, plants, zones, commit, setSelection,
         }
       } else if (ds.type === "library-plant") {
         if (ds.valid && ds.candidateRow !== null && ds.candidateCol !== null) {
-          const species = ds.species;
+          const id = ds.id;
           const startRow = ds.candidateRow;
           const startCol = ds.candidateCol;
           commit((d) => ({
             ...d,
-            plants: [
-              ...d.plants,
-              {
-                id: createId(),
-                name: species.name,
-                startRow,
-                startCol,
-                width: species.defaultWidth,
-                height: species.defaultHeight,
-                photoUrl: null,
-                color: species.color,
-                species: null,
-                speciesUncertain: false,
-                lastWateredAt: null,
-                careAdvice: null,
-                notes: null,
-                analyzedAt: null,
-                analysis: null,
-              },
-            ],
+            plants: d.plants.map((p) => (p.id === id ? { ...p, startRow, startCol } : p)),
           }));
         }
       } else if (ds.type === "library-zone") {
         if (ds.valid && ds.candidateRow !== null && ds.candidateCol !== null) {
-          const zoneKind = ds.zoneKind;
+          const id = ds.id;
           const startRow = ds.candidateRow;
           const startCol = ds.candidateCol;
           commit((d) => ({
             ...d,
-            zones: [
-              ...d.zones,
-              {
-                id: createId(),
-                kind: zoneKind.kind,
-                label: zoneKindLibraryLabel(zoneKind, tRef.current),
-                startRow,
-                startCol,
-                width: zoneKind.defaultWidth,
-                height: zoneKind.defaultHeight,
-                color: zoneKind.color,
-                notes: null,
-              },
-            ],
+            zones: d.zones.map((z) => (z.id === id ? { ...z, startRow, startCol } : z)),
           }));
         }
       }

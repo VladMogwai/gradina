@@ -13,24 +13,31 @@
   box-shadow: $shadow-sm;
 }
 
-.heading {
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.heading {
   font-size: 0.875rem;
   font-weight: 600;
   color: $slate-700;
 }
 
-.hint {
-  font-size: 0.875rem;
+.closeButton {
+  flex-shrink: 0;
+  border-radius: $radius-sm;
+  padding: 0 6px;
+  font-size: 1rem;
+  line-height: 1;
   color: $slate-400;
-}
 
-.sectionSm {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 12px;
-  overflow: auto;
+  &:hover {
+    background: $slate-100;
+    color: $slate-600;
+  }
 }
 
 .sectionLg {
@@ -60,27 +67,6 @@
   color: $slate-700;
 }
 
-.emptyCellHint {
-  font-size: 0.75rem;
-  color: $slate-400;
-}
-
-.formSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-top: 1px solid $slate-100;
-  padding-top: 12px;
-}
-
-.formHeading {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: $slate-400;
-}
-
 .textField {
   width: 100%;
   border-radius: $radius-md;
@@ -98,41 +84,6 @@
 .textarea {
   @extend .textField;
   resize: none;
-}
-
-.sizeRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.numberInput {
-  width: 64px;
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
-  padding: 4px 8px;
-  font-size: 0.875rem;
-  color: $slate-800;
-}
-
-.times {
-  font-size: 0.75rem;
-  color: $slate-400;
-}
-
-.cellsLabel {
-  font-size: 0.75rem;
-  color: $slate-400;
-}
-
-.colorInputAuto {
-  margin-left: auto;
-  height: 28px;
-  width: 36px;
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
 }
 
 .colorInput {
@@ -170,7 +121,7 @@
 }
 
 .photoBox {
-  height: 112px;
+  min-height: 250px;
   width: 100%;
   overflow: hidden;
   border-radius: $radius-lg;
@@ -178,21 +129,58 @@
 }
 
 .photoImg {
-  height: 100%;
+  display: block;
   width: 100%;
-  // contain so the whole photo stays visible instead of being cropped
-  // when its aspect ratio doesn't match the box.
-  object-fit: contain;
+  height: auto;
 }
 
 .noPhotoText {
   display: flex;
-  height: 100%;
+  height: 250px;
   width: 100%;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   color: $slate-400;
+}
+
+.photoThumbStrip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.photoThumbWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.photoThumb {
+  height: 44px;
+  width: 44px;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  object-fit: cover;
+}
+
+.photoThumbRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  height: 18px;
+  width: 18px;
+  border-radius: $radius-full;
+  border: 1px solid $slate-200;
+  background: $white;
+  font-size: 11px;
+  line-height: 1;
+  color: $slate-500;
+
+  &:hover {
+    border-color: $red-200;
+    background: $red-50;
+    color: $red-600;
+  }
 }
 
 .photoButton {

@@ -16,7 +16,17 @@ export default async function Home() {
 
   return (
     <EditorShell>
-      <GardenEditor userId={user.id} initialDoc={doc ?? { grid: DEFAULT_GRID, plants: [], zones: [] }} />
+      <GardenEditor
+        userId={user.id}
+        initialDoc={
+          doc ?? {
+            grid: DEFAULT_GRID,
+            plants: [],
+            zones: [],
+            settings: { hardinessZone: null, lastFrostDate: null, firstFrostDate: null },
+          }
+        }
+      />
     </EditorShell>
   );
 }

@@ -1,5 +1,5 @@
-import { fallbackColorFor, PlantObject, type Plant } from "@/entities/plant";
-import { buildZonePathData, ZoneObject, zoneKindLibraryLabel, type Zone } from "@/entities/zone";
+import { PlantObject, type Plant } from "@/entities/plant";
+import { buildZonePathData, ZoneObject, type Zone } from "@/entities/zone";
 import type { GridSize, Rect } from "@/shared/lib/geometry";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, type RefObject } from "react";
@@ -83,6 +83,15 @@ export function GridCanvas({
             gets a hole clipped out around it. */}
         {(() => {
           function zoneOverride(zone: Zone) {
+            if (dragState?.type === "library-zone" && dragState.id === zone.id) {
+              return {
+                startRow: dragState.candidateRow ?? zone.startRow,
+                startCol: dragState.candidateCol ?? zone.startCol,
+                width: zone.width,
+                height: zone.height,
+                valid: dragState.valid,
+              };
+            }
             return dragState &&
               (dragState.type === "move" || dragState.type === "resize") &&
               dragState.target === "zone" &&
@@ -197,26 +206,34 @@ export function GridCanvas({
         {/* Layer 3: plants (top) */}
         {plants.map((plant) => {
           const override =
-            dragState &&
-            (dragState.type === "move" || dragState.type === "resize") &&
-            dragState.target === "plant" &&
-            dragState.id === plant.id
-              ? dragState.type === "move"
-                ? {
-                    startRow: dragState.candidateRow,
-                    startCol: dragState.candidateCol,
-                    width: plant.width,
-                    height: plant.height,
-                    valid: dragState.valid,
-                  }
-                : {
-                    startRow: plant.startRow,
-                    startCol: plant.startCol,
-                    width: dragState.candidateWidth,
-                    height: dragState.candidateHeight,
-                    valid: dragState.valid,
-                  }
-              : undefined;
+            dragState?.type === "library-plant" && dragState.id === plant.id
+              ? {
+                  startRow: dragState.candidateRow ?? plant.startRow,
+                  startCol: dragState.candidateCol ?? plant.startCol,
+                  width: plant.width,
+                  height: plant.height,
+                  valid: dragState.valid,
+                }
+              : dragState &&
+                  (dragState.type === "move" || dragState.type === "resize") &&
+                  dragState.target === "plant" &&
+                  dragState.id === plant.id
+                ? dragState.type === "move"
+                  ? {
+                      startRow: dragState.candidateRow,
+                      startCol: dragState.candidateCol,
+                      width: plant.width,
+                      height: plant.height,
+                      valid: dragState.valid,
+                    }
+                  : {
+                      startRow: plant.startRow,
+                      startCol: plant.startCol,
+                      width: dragState.candidateWidth,
+                      height: dragState.candidateHeight,
+                      valid: dragState.valid,
+                    }
+                : undefined;
 
           return (
             <PlantObject
@@ -233,51 +250,6 @@ export function GridCanvas({
             />
           );
         })}
-
-        {/* Library drag-and-drop preview: plant */}
-        {dragState?.type === "library-plant" &&
-          dragState.candidateRow !== null &&
-          dragState.candidateCol !== null && (
-            <div
-              className={`${styles.libraryPreview} ${dragState.valid ? styles.previewValid : styles.previewInvalid}`}
-              style={{
-                top: dragState.candidateRow * cellSize,
-                left: dragState.candidateCol * cellSize,
-                width: dragState.species.defaultWidth * cellSize,
-                height: dragState.species.defaultHeight * cellSize,
-                background: `linear-gradient(135deg, ${fallbackColorFor(dragState.species.name)}55, transparent)`,
-              }}
-            >
-              <div className={styles.previewLabel}>
-                {dragState.valid ? dragState.species.name : t("invalidPlacement")}
-              </div>
-            </div>
-          )}
-
-        {/* Library drag-and-drop preview: zone */}
-        {dragState?.type === "library-zone" &&
-          dragState.candidateRow !== null &&
-          dragState.candidateCol !== null && (
-            <div
-              className={`${styles.libraryPreviewZone} ${
-                dragState.valid ? styles.previewValid : styles.previewInvalid
-              }`}
-              style={{
-                top: dragState.candidateRow * cellSize,
-                left: dragState.candidateCol * cellSize,
-                width: dragState.zoneKind.defaultWidth * cellSize,
-                height: dragState.zoneKind.defaultHeight * cellSize,
-                backgroundColor: `${dragState.zoneKind.color}33`,
-              }}
-            >
-              <div
-                className={styles.zoneLibraryPreviewLabel}
-                style={{ backgroundColor: `${dragState.zoneKind.color}cc` }}
-              >
-                {dragState.valid ? zoneKindLibraryLabel(dragState.zoneKind, t) : t("invalidPlacement")}
-              </div>
-            </div>
-          )}
       </div>
     </div>
   );

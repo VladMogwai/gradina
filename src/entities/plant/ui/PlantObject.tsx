@@ -31,7 +31,7 @@ export function PlantObject({
   const dragging = Boolean(override);
   // The chosen color (set when the plant was created/edited) is the source
   // of truth; only fall back to a name-derived color when none was set.
-  const color = plant.color ?? fallbackColorFor(plant.species ?? plant.name);
+  const color = plant.color ?? fallbackColorFor(plant.species?.scientificName ?? plant.name);
 
   const classNames = [
     styles.plant,
@@ -66,9 +66,9 @@ export function PlantObject({
           background: `linear-gradient(135deg, ${color}, ${color}cc)`,
         }}
       />
-      {plant.photoUrl && (
+      {plant.photos[0] && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={plant.photoUrl} alt={plant.name} className={styles.photo} draggable={false} />
+        <img src={plant.photos[0].url} alt={plant.name} className={styles.photo} draggable={false} />
       )}
       <div className={styles.label}>{dragging && !override!.valid ? t("invalidPlacement") : plant.name}</div>
       {debug && (

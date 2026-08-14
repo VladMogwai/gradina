@@ -62,5 +62,11 @@ export function useZoneActions({ grid, commit, setSelection }: UseZoneActionsPar
     [commit, setSelection]
   );
 
-  return { handleZoneLabelChange, handleZoneColorChange, handleZoneNotesChange, handleAddZone, handleDeleteZone };
+  return {
+    handleZoneLabelChange,
+    handleZoneColorChange,
+    handleZoneNotesChange,
+    handleAddZone,
+    handleDeleteZone,
+  };
 }

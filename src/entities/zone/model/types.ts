@@ -14,14 +14,3 @@ export interface Zone {
   color: string;
   notes: string | null;
 }
-
-// Library entry for dropping a new zone onto the grid.
-export interface LibraryZoneKind {
-  key: string; // unique across the list; built-ins reuse `kind`
-  kind: ZoneKind;
-  label?: string; // custom display label; falls back to the kind's translated name
-  color: string;
-  defaultWidth: number;
-  defaultHeight: number;
-  custom?: boolean; // user-added via the library panel, deletable
-}

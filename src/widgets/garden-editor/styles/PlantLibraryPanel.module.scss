@@ -20,15 +20,38 @@
   color: $slate-700;
 }
 
+.headerActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.headerButton {
+  flex: 1;
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $slate-600;
+
+  &:hover {
+    border-color: $emerald-500;
+    color: $emerald-600;
+    background: $slate-50;
+  }
+}
+
 .textField {
   width: 100%;
   border-radius: $radius-md;
-  border: 1px solid $slate-200;
+
   padding: 4px 8px;
   font-size: 0.875rem;
   color: $slate-800;
   outline: none;
 
+  border: 1px solid gray;
   &:focus {
     @include focus-ring($emerald-500);
   }
@@ -38,6 +61,7 @@
   @extend .textField;
   margin-bottom: 12px;
   padding: 6px 10px;
+  border: 1px solid gray;
 }
 
 // Bug fix: this was `overflow: auto` (both axes). If any child ever grew a
@@ -85,7 +109,7 @@
   color: $slate-400;
 }
 
-// Built-in (non-custom) draggable rows.
+// Browse rows: drag-to-place (or click to select) + delete only.
 .entryRow {
   display: flex;
   align-items: center;
@@ -126,6 +150,14 @@
   border: 2px dashed;
 }
 
+.thumb {
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  object-fit: cover;
+}
+
 .entryBody {
   min-width: 0;
   flex: 1;
@@ -140,25 +172,96 @@
   color: $slate-800;
 }
 
-.entrySize {
+.entryMeta {
   font-size: 11px;
   color: $slate-400;
 }
 
-// "+" add-new forms.
-.addCard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-radius: $radius-lg;
-  border: 1px dashed $slate-300;
-  padding: 8px;
+.deleteButton {
+  flex-shrink: 0;
+  border-radius: $radius-sm;
+  padding: 0 6px;
+  color: $slate-400;
+
+  &:hover {
+    background: $red-50;
+    color: $red-600;
+  }
 }
 
-.row {
+// Create modals (opened from the header buttons).
+.modalForm {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $slate-600;
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  color: $red-600;
+}
+
+.sizeRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sizeInput {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sizeHint {
+  font-size: 11px;
+  color: $slate-400;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.primaryButton {
+  border-radius: $radius-md;
+  background: $emerald-600;
+  padding: 6px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $white;
+
+  &:hover {
+    background: $emerald-500;
+  }
+}
+
+.secondaryButton {
+  border-radius: $radius-md;
+  border: 1px solid $slate-200;
+  padding: 6px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $slate-600;
+
+  &:hover {
+    background: $slate-50;
+  }
 }
 
 .smallNumber {
@@ -182,149 +285,4 @@
   cursor: pointer;
   border-radius: $radius-sm;
   border: 1px solid $slate-200;
-}
-
-// Bug fix: this button used to sit inline with the size inputs (`margin-left:
-// auto` in a single non-wrapping row). Longer translated labels (ru/ro) could
-// exceed the remaining row width and overflow past the card's edge instead of
-// wrapping. Giving it its own full-width row makes overflow impossible
-// regardless of label length.
-.addButton {
-  width: 100%;
-  border-radius: $radius-md;
-  background: $emerald-600;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: $white;
-
-  &:hover:not(:disabled) {
-    background: $emerald-500;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
-}
-
-// Inline-editable rows for custom (user-added) entries.
-.customRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: $radius-lg;
-  border: 1px solid $slate-200;
-  padding: 8px;
-}
-
-.customZoneRow {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-radius: $radius-lg;
-  border: 1px solid $slate-200;
-  padding: 8px;
-}
-
-.dragHandle {
-  height: 32px;
-  width: 32px;
-  flex-shrink: 0;
-  border-radius: $radius-md;
-}
-
-.dragHandleZone {
-  @extend .dragHandle;
-  border: 2px dashed;
-}
-
-.dragHandleEditable {
-  cursor: grab;
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.dragHandleDisabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.inlineNameInput {
-  min-width: 0;
-  flex: 1;
-  border-radius: $radius-md;
-  border: 1px solid transparent;
-  padding: 2px 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $slate-800;
-  outline: none;
-
-  &:hover {
-    border-color: $slate-200;
-  }
-
-  &:focus {
-    @include focus-ring($emerald-500);
-  }
-}
-
-.miniNumber {
-  width: 40px;
-  flex-shrink: 0;
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
-  padding: 2px 4px;
-  font-size: 0.75rem;
-  color: $slate-800;
-}
-
-.miniTimes {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  color: $slate-400;
-}
-
-.miniColor {
-  height: 24px;
-  width: 28px;
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: $radius-sm;
-  border: 1px solid $slate-200;
-}
-
-.deleteButton {
-  flex-shrink: 0;
-  border-radius: $radius-sm;
-  padding: 0 6px;
-  color: $slate-400;
-
-  &:hover {
-    background: $red-50;
-    color: $red-600;
-  }
-}
-
-.zoneSecondRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-left: 40px;
-}
-
-.miniSelect {
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
-  padding: 2px 4px;
-  font-size: 0.75rem;
-  color: $slate-800;
-}
-
-.cellsLabel {
-  font-size: 11px;
-  color: $slate-400;
 }

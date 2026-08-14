@@ -19,8 +19,7 @@ interface ToolbarProps {
   onRedo: () => void;
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
-  debug: boolean;
-  onDebugChange: (debug: boolean) => void;
+  onOpenSettings: () => void;
   onSave: () => void;
   savedFlash: boolean;
 }
@@ -61,8 +60,7 @@ export function Toolbar({
   onRedo,
   mode,
   onModeChange,
-  debug,
-  onDebugChange,
+  onOpenSettings,
   onSave,
   savedFlash,
 }: ToolbarProps) {
@@ -122,14 +120,9 @@ export function Toolbar({
           </IconButton>
         </div>
 
-        <label className={styles.debugLabel}>
-          <input
-            type="checkbox"
-            checked={debug}
-            onChange={(e) => onDebugChange(e.target.checked)}
-          />
-          {t("debug")}
-        </label>
+        <IconButton onClick={onOpenSettings} title={t("gardenSettings")}>
+          ⚙ {t("gardenSettings")}
+        </IconButton>
 
         <div className={styles.actions}>
           <div className={styles.languageSwitcher}>
