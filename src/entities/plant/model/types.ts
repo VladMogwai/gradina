@@ -8,6 +8,10 @@ export interface PlantPhoto {
   id: string;
   url: string;
   sortOrder: number;
+  // base64 thumbhash written at upload time, rendered as next/image's blur
+  // placeholder. Null for photos uploaded before the column existed - they
+  // just render without a blur-up.
+  placeholder: string | null;
 }
 
 // Mirrors the `plants` table + position, per the future Supabase schema.

@@ -1,0 +1,29 @@
+@use "../../../shared/styles/tokens" as *;
+
+// No position/inset here - callers decide whether it's an inline flex item
+// or an absolute-positioned overlay via their own wrapping className.
+.badge {
+  display: flex;
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-full;
+  box-shadow: $shadow-sm;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: $white;
+
+  &[data-tier="low"] {
+    background: $red-500;
+  }
+
+  &[data-tier="medium"] {
+    background: $amber-700;
+  }
+
+  &[data-tier="high"] {
+    background: $emerald-600;
+  }
+}

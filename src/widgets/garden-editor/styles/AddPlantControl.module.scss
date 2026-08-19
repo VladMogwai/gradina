@@ -1,0 +1,15 @@
+// 1050 matches MUI's own theme.zIndex.fab, so this sits correctly beneath
+// the AppBar (1100), Drawer (1200), and Dialog (1300) it can appear next to.
+.fab {
+  position: fixed;
+  right: max(16px, calc(env(safe-area-inset-right) + 16px));
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 16px));
+  z-index: 1050;
+}
+
+.dialogContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}

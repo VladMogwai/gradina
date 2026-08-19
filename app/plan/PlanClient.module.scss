@@ -1,0 +1,11 @@
+@use "../../src/shared/styles/tokens" as *;
+
+.webOnlyNote {
+  display: flex;
+  height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: $slate-500;
+}

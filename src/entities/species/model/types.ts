@@ -36,4 +36,49 @@ export interface Species {
 
   fallbackDescription: SpeciesLocalized | null;
   fallbackCare: SpeciesLocalized | null;
+
+  // Perenual free-tier extras. Enum-ish text fields (type, cycle,
+  // maintenance, seasons, propagation) go through localizeEnum for display;
+  // family/genus stay Latin.
+  type: string | null;
+  cycle: string | null;
+  family: string | null;
+  genus: string | null;
+  otherName: string[] | null;
+  origin: string[] | null;
+  propagation: string[] | null;
+  dimensions: SpeciesDimension[] | null;
+  plantAnatomy: SpeciesAnatomy[] | null;
+  pruningCount: { amount: number; interval: string } | null;
+  maintenance: string | null;
+  floweringSeason: string | null;
+  harvestSeason: string | null;
+  defaultImageUrl: string | null;
+
+  saltTolerant: boolean | null;
+  thorny: boolean | null;
+  invasive: boolean | null;
+  tropical: boolean | null;
+  indoor: boolean | null;
+  flowers: boolean | null;
+  cones: boolean | null;
+  fruits: boolean | null;
+  edibleFruit: boolean | null;
+  leaf: boolean | null;
+  edibleLeaf: boolean | null;
+  cuisine: boolean | null;
+  medicinal: boolean | null;
+  seeds: boolean | null;
+}
+
+export interface SpeciesDimension {
+  type: string;
+  min_value: number;
+  max_value: number;
+  unit: string;
+}
+
+export interface SpeciesAnatomy {
+  part: string;
+  color: string[];
 }

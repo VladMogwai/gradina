@@ -8,3 +8,4 @@ export {
 } from "./model/constants";
 export { zonesOrphanedBy } from "./lib/orphaned";
 export { buildZonePathData, zoneHasPriority } from "./lib/zoneClip";
+export { zoneForPlant } from "./lib/zoneForPlant";

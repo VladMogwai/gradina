@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import type { IdentificationConfidence, Plant, PlantPhoto } from "@/entities/plant";
 import type { Species } from "@/entities/species";
-import { canPlace, type GridSize } from "@/shared/lib/geometry";
+import { findFreeCell, type GridSize } from "@/shared/lib/geometry";
 import { createId } from "@/shared/lib/id";
 import type { Selection } from "./types";
 import type { GardenDoc } from "./useHistory";
@@ -42,20 +42,6 @@ export function usePlantActions({ grid, plants, commit, replacePresent, setSelec
     [replacePresent]
   );
 
-  const handlePlantNameChange = useCallback(
-    (id: string, name: string) => {
-      commit((d) => ({ ...d, plants: d.plants.map((p) => (p.id === id ? { ...p, name } : p)) }));
-    },
-    [commit]
-  );
-
-  const handlePlantColorChange = useCallback(
-    (id: string, color: string) => {
-      commit((d) => ({ ...d, plants: d.plants.map((p) => (p.id === id ? { ...p, color } : p)) }));
-    },
-    [commit]
-  );
-
   const handlePlantNotesChange = useCallback(
     (id: string, notes: string) => {
       commit((d) => ({
@@ -89,34 +75,35 @@ export function usePlantActions({ grid, plants, commit, replacePresent, setSelec
     [commit, setSelection]
   );
 
-  const handleAddPlant = useCallback(
-    (row: number, col: number, name: string, width: number, height: number, color: string | null = null) => {
-      const rect = { startRow: row, startCol: col, width, height };
-      if (!canPlace(rect, plants, grid)) return false;
-      const id = createId();
-      commit((d) => ({
-        ...d,
-        plants: [
-          ...d.plants,
-          {
-            id,
-            name,
-            startRow: row,
-            startCol: col,
-            width,
-            height,
-            photos: [],
-            color,
-            speciesId: null,
-            identificationConfidence: null,
-            species: null,
-            notes: null,
-            analyzedAt: null,
-          },
-        ],
-      }));
-      setSelection({ kind: "plant", id });
-      return true;
+  // Photo-only creation path: no name/color/size form, so this always
+  // places a 1x1 plant with a placeholder name (overwritten once analysis
+  // runs, see handleAnalysisChange) and a null color (falls back to
+  // fallbackColorFor). Returns the new Plant (not just its id) so the
+  // caller can build an exact GardenDoc snapshot for a direct saveNow(doc)
+  // call without racing the debounced autosave - see GardenEditor's
+  // handleCreatePlantFromPhoto. Returns null if the grid is completely full.
+  const handleCreatePlant = useCallback(
+    (name: string): Plant | null => {
+      const free = findFreeCell(1, 1, plants, grid);
+      if (!free) return null;
+      const newPlant: Plant = {
+        id: createId(),
+        name,
+        startRow: free.row,
+        startCol: free.col,
+        width: 1,
+        height: 1,
+        photos: [],
+        color: null,
+        speciesId: null,
+        identificationConfidence: null,
+        species: null,
+        notes: null,
+        analyzedAt: null,
+      };
+      commit((d) => ({ ...d, plants: [...d.plants, newPlant] }));
+      setSelection({ kind: "plant", id: newPlant.id });
+      return newPlant;
     },
     [grid, plants, commit, setSelection]
   );
@@ -124,11 +111,9 @@ export function usePlantActions({ grid, plants, commit, replacePresent, setSelec
   return {
     handleAddPhoto,
     handleRemovePhoto,
-    handlePlantNameChange,
-    handlePlantColorChange,
     handlePlantNotesChange,
     handleAnalysisChange,
     handleDeletePlant,
-    handleAddPlant,
+    handleCreatePlant,
   };
 }

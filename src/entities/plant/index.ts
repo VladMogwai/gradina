@@ -1,7 +1,11 @@
 export { PlantObject } from "./ui/PlantObject";
+export { PlantPhotoImage } from "./ui/PlantPhotoImage";
+export { ConfidenceBadge } from "./ui/ConfidenceBadge";
 export type { Plant, PlantDraft, PlantPhoto, IdentificationConfidence } from "./model/types";
 export { fallbackColorFor } from "./model/constants";
 export { plantsOrphanedBy } from "./lib/orphaned";
+export { aspectRatioFor, DEFAULT_PHOTO_ASPECT } from "./lib/thumbhash";
 export { addPlantPhoto, removePlantPhoto, PLANT_PHOTOS_BUCKET } from "./api/plantPhotoApi";
+export { backfillPhotoPlaceholder } from "./api/backfillPhotoPlaceholder";
 export { analyzePlantPhoto } from "./api/analyzePlantPhotoAction";
 export type { AnalyzePlantPhotoResult } from "./api/analyzePlantPhotoAction";

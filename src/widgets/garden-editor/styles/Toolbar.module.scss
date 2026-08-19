@@ -1,27 +1,27 @@
 @use "../../../shared/styles/tokens" as *;
 
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-bottom: 1px solid $slate-200;
-  background: $white;
-  padding: 10px 16px;
+.appBar {
+  padding-top: env(safe-area-inset-top);
 }
 
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
+.inner {
+  gap: 4px;
+  padding-left: max(16px, calc(env(safe-area-inset-left) + 8px));
+  padding-right: max(16px, calc(env(safe-area-inset-right) + 8px));
 }
 
 .title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: $slate-800;
+  flex: 1;
+  min-width: 0;
+  margin-left: 4px;
 }
 
+.statusChip {
+  margin-right: 4px;
+}
+
+// Not currently rendered (the row/column inputs above are commented out),
+// kept for when that grid-resize UI comes back.
 .gridSettings {
   display: flex;
   align-items: center;
@@ -43,103 +43,14 @@
   }
 }
 
-.group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.zoomLabel {
-  width: 40px;
-  text-align: center;
-  font-size: 0.875rem;
-  color: $slate-500;
-}
-
+// Already unreferenced before this file was touched - left in place per
+// the "don't delete code you didn't orphan" rule.
 .debugLabel {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 0.875rem;
   color: $slate-500;
-}
-
-.iconButton {
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
-  padding: 6px 10px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $slate-600;
-  background: $white;
-
-  &:hover:not(:disabled) {
-    background: $slate-50;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
-}
-
-.actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.languageSwitcher {
-  font-size: 0.875rem;
-  color: $slate-500;
-}
-
-.savedFlash {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: $emerald-600;
-}
-
-.saveButton {
-  border-radius: $radius-md;
-  background: $slate-800;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $white;
-
-  &:hover {
-    background: $slate-700;
-  }
-}
-
-.modeSwitch {
-  display: flex;
-  overflow: hidden;
-  border-radius: $radius-md;
-  border: 1px solid $slate-200;
-}
-
-.modeButton {
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: $white;
-  color: $slate-600;
-
-  &:hover {
-    background: $slate-50;
-  }
-}
-
-.modeButtonActive {
-  background: $emerald-600;
-  color: $white;
-
-  &:hover {
-    background: $emerald-600;
-  }
 }
 
 .resizeError {

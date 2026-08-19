@@ -1,7 +1,7 @@
-import { Modal } from "@/shared/ui/Modal";
+import { LanguageSwitcher } from "@/features/locale-switch";
+import { Dialog, DialogContent, DialogTitle, Divider, Stack, TextField, Typography } from "@mui/material";
 import { useTranslations } from "next-intl";
 import type { GardenSettings } from "../model/useHistory";
-import styles from "../styles/GardenSettingsModal.module.scss";
 
 interface GardenSettingsModalProps {
   open: boolean;
@@ -12,44 +12,50 @@ interface GardenSettingsModalProps {
 
 // Fields apply immediately on change (same direct-edit pattern as every
 // other field in the app - the debounced autosave persists it), no
-// separate save step. The modal is just a container for a settings group
-// that doesn't need to live in the always-visible toolbar.
+// separate save step. Doubles as the app's general "settings" surface, so
+// the language switcher (moved off the top bar) lives here too.
 export function GardenSettingsModal({ open, onClose, settings, onSettingsChange }: GardenSettingsModalProps) {
   const t = useTranslations("Editor");
 
   return (
-    <Modal open={open} onClose={onClose} title={t("gardenSettings")}>
-      <div className={styles.form}>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("hardinessZone")}</span>
-          <input
-            type="text"
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>{t("gardenSettings")}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2.5} sx={{ pt: 0.5 }}>
+          <TextField
+            label={t("hardinessZone")}
             value={settings.hardinessZone ?? ""}
             onChange={(e) => onSettingsChange({ hardinessZone: e.target.value.trim() || null })}
             placeholder={t("hardinessZonePlaceholder")}
-            className={styles.textField}
+            size="small"
+            fullWidth
           />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("lastFrostDate")}</span>
-          <input
+          <TextField
+            label={t("lastFrostDate")}
             type="date"
             value={settings.lastFrostDate ?? ""}
             onChange={(e) => onSettingsChange({ lastFrostDate: e.target.value || null })}
-            className={styles.textField}
+            size="small"
+            fullWidth
+            slotProps={{ inputLabel: { shrink: true } }}
           />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("firstFrostDate")}</span>
-          <input
+          <TextField
+            label={t("firstFrostDate")}
             type="date"
             value={settings.firstFrostDate ?? ""}
             onChange={(e) => onSettingsChange({ firstFrostDate: e.target.value || null })}
-            className={styles.textField}
+            size="small"
+            fullWidth
+            slotProps={{ inputLabel: { shrink: true } }}
           />
-        </label>
-        <p className={styles.hint}>{t("gardenSettingsHint")}</p>
-      </div>
-    </Modal>
+          <Typography variant="caption" color="text.secondary">
+            {t("gardenSettingsHint")}
+          </Typography>
+
+          <Divider />
+          <LanguageSwitcher />
+        </Stack>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -9,7 +9,7 @@ const PLANT_COLUMNS =
   "color, speciesId:species_id, identificationConfidence:identification_confidence, " +
   "notes, analyzedAt:analyzed_at, " +
   `species(${SPECIES_COLUMNS}), ` +
-  "plant_photos(id, storagePath:storage_path, sortOrder:sort_order)";
+  "plant_photos(id, storagePath:storage_path, sortOrder:sort_order, placeholder)";
 
 const ZONE_COLUMNS = "id, kind, label, startRow:start_row, startCol:start_col, width, height, color, notes";
 
@@ -18,7 +18,7 @@ const GARDEN_COLUMNS =
 
 type PlantRow = Omit<Plant, "photos" | "species"> & {
   species: Species | null;
-  plant_photos: { id: string; storagePath: string; sortOrder: number }[];
+  plant_photos: { id: string; storagePath: string; sortOrder: number; placeholder: string | null }[];
 };
 
 function resolvePhotos(supabase: SupabaseClient, rows: PlantRow["plant_photos"]): PlantPhoto[] {
@@ -28,6 +28,7 @@ function resolvePhotos(supabase: SupabaseClient, rows: PlantRow["plant_photos"])
       id: r.id,
       url: supabase.storage.from(PLANT_PHOTOS_BUCKET).getPublicUrl(r.storagePath).data.publicUrl,
       sortOrder: r.sortOrder,
+      placeholder: r.placeholder,
     }));
 }
 

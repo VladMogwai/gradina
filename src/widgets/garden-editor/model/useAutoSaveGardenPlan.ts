@@ -19,14 +19,14 @@ export function useAutoSaveGardenPlan(doc: GardenDoc) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const docRef = useRef(doc);
 
-  const saveRef = useRef(async () => {
+  const saveRef = useRef(async (explicitDoc?: GardenDoc) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     setStatus("saving");
     try {
-      await saveGardenDoc(supabaseRef.current, docRef.current);
+      await saveGardenDoc(supabaseRef.current, explicitDoc ?? docRef.current);
       setStatus("saved");
     } catch {
       setStatus("error");
@@ -51,5 +51,5 @@ export function useAutoSaveGardenPlan(doc: GardenDoc) {
     };
   }, [doc]);
 
-  return { status, saveNow: () => saveRef.current() };
+  return { status, saveNow: (explicitDoc?: GardenDoc) => saveRef.current(explicitDoc) };
 }

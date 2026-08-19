@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { ThemeRegistry } from "@/shared/config/mui/ThemeRegistry";
 import "@/app/styles/globals.scss";
 import styles from "@/app/styles/layout.module.scss";
 
@@ -25,7 +26,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className={styles.body}>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <ThemeRegistry>{children}</ThemeRegistry>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,16 +1,30 @@
 @use "../../../shared/styles/tokens" as *;
 
+// Applied directly to the SwipeableDrawer's Paper (the sheet surface
+// itself), not an inner wrapper - MUI's Drawer/Modal machinery supplies
+// positioning, backdrop, and the open/close transition. Constrained +
+// centered on wide viewports (a phone-like column) rather than a
+// two-column split - simpler given this stayed a single linear flex
+// column; the two-column alternative would need wrapping everything but
+// the photo in a new right-hand container.
 .panel {
-  display: flex;
-  height: 100%;
-  width: 288px;
-  flex-shrink: 0;
-  flex-direction: column;
-  border-radius: $radius-xl;
-  border: 1px solid $slate-200;
-  background: $white;
-  padding: 16px;
-  box-shadow: $shadow-sm;
+  max-height: 85dvh;
+  overflow-y: auto;
+  border-radius: $radius-xl $radius-xl 0 0;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+
+  @media (min-width: 600px) {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
+.dragHandle {
+  height: 4px;
+  width: 36px;
+  margin: 0 auto 12px;
+  border-radius: $radius-full;
+  background: $slate-200;
 }
 
 .panelHeader {
@@ -24,20 +38,6 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: $slate-700;
-}
-
-.closeButton {
-  flex-shrink: 0;
-  border-radius: $radius-sm;
-  padding: 0 6px;
-  font-size: 1rem;
-  line-height: 1;
-  color: $slate-400;
-
-  &:hover {
-    background: $slate-100;
-    color: $slate-600;
-  }
 }
 
 .sectionLg {
@@ -67,6 +67,8 @@
   color: $slate-700;
 }
 
+// Not applied directly anywhere anymore (Name/Color inputs are gone, Label
+// is now an MUI TextField) - kept only because .textarea below extends it.
 .textField {
   width: 100%;
   border-radius: $radius-md;
@@ -120,23 +122,48 @@
   }
 }
 
+// Fixed aspect + object-fit: cover (below) - was `min-height:250px` with a
+// naturally-sized <img>, which stretched into a tall/short banner
+// depending on the photo's own aspect ratio.
 .photoBox {
-  min-height: 250px;
+  // Positioning context for next/image's `fill` (see PlantPhotoImage).
+  position: relative;
+  aspect-ratio: 4 / 3;
   width: 100%;
+  // Without this, .sectionLg's flex-shrink (default 1, same as every
+  // sibling) compresses this box down to near-nothing whenever the
+  // panel's total content is taller than the drawer, instead of leaving
+  // it at its aspect-ratio size and letting .sectionLg's overflow:auto
+  // scroll the rest - min-height:250px used to be an accidental floor
+  // against exactly this before the aspect-ratio switch.
+  flex-shrink: 0;
   overflow: hidden;
   border-radius: $radius-lg;
   background: $slate-100;
 }
 
-.photoImg {
-  display: block;
-  width: 100%;
-  height: auto;
+// Sits over the photo box (which already reserves its 4:3 height), so the
+// sheet never looks inert while a photo is being processed and uploaded.
+.photoBusyOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(241, 245, 249, 0.72);
+}
+
+.photoBusyLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $slate-600;
 }
 
 .noPhotoText {
   display: flex;
-  height: 250px;
+  height: 100%;
   width: 100%;
   align-items: center;
   justify-content: center;
@@ -147,20 +174,20 @@
 .photoThumbStrip {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
+  //overflow-x: auto;
 }
 
 .photoThumbWrap {
+  // Also the positioning context for the thumb's `fill` image.
   position: relative;
   flex-shrink: 0;
+  height: 44px;
+  width: 44px;
 }
 
 .photoThumb {
-  height: 44px;
-  width: 44px;
   border-radius: $radius-md;
   border: 1px solid $slate-200;
-  object-fit: cover;
 }
 
 .photoThumbRemove {
@@ -169,11 +196,10 @@
   right: -6px;
   height: 18px;
   width: 18px;
+  padding: 0;
   border-radius: $radius-full;
   border: 1px solid $slate-200;
   background: $white;
-  font-size: 11px;
-  line-height: 1;
   color: $slate-500;
 
   &:hover {
@@ -183,15 +209,24 @@
   }
 }
 
-.photoButton {
+// Replaces the old full-width "Add photo" bar - a small tile at the end
+// of the thumbnail strip instead, same footprint as a thumbnail.
+.addPhotoTile {
+  display: flex;
+  height: 44px;
+  width: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   border-radius: $radius-md;
-  border: 1px solid $slate-200;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $slate-600;
+  border: 1px dashed $slate-300;
+  color: $slate-500;
+  min-width: 44px;
+  padding: 0;
 
-  &:hover {
+  &:hover:not(:disabled) {
+    border-color: $emerald-500;
+    color: $emerald-600;
     background: $slate-50;
   }
 }
@@ -200,68 +235,115 @@
   display: none;
 }
 
-.analysisSection {
+.nameRow {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nameCol {
+  display: flex;
+  min-width: 0;
   flex-direction: column;
+  gap: 2px;
+}
+
+.nameProminent {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $slate-800;
+}
+
+// Now a muted subtitle under the prominent name (only shown when a common
+// name exists, so the scientific name doesn't just repeat plant.name) -
+// previously sat inline next to a confidence chip, hence the heavier
+// weight this rule used to carry.
+.scientificName {
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: $slate-500;
+}
+
+// Demoted from a full-width bar to a small secondary action.
+.analyzeButtonSm {
+  align-self: flex-start;
+}
+
+.descriptionBlock {
+  display: block;
+}
+
+.descriptionText {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: $slate-600;
+}
+
+.descriptionClamped {
+  @extend .descriptionText;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.expandToggle {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $emerald-600;
+
+  &:hover {
+    color: $emerald-500;
+    text-decoration: underline;
+  }
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-.analyzeButton {
-  border-radius: $radius-md;
-  border: 1px solid $sky-500;
-  background: $sky-50;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $sky-700;
-
-  &:hover {
-    background: $sky-100;
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
-}
-
-.analysisResult {
+.traitsBlock {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.traitsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+// Neutral-informational on purpose: these are facts, not warnings. The one
+// genuine warning (poisonous) stays its own red line below.
+.traitChip {
+  background: $sky-50;
+  color: $sky-700;
+}
+
+.metricTile {
   border-radius: $radius-md;
   background: $sky-50;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
-.confidenceRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.scientificName {
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-style: italic;
-  color: $slate-700;
-}
-
-.confidenceBadge {
-  border-radius: $radius-full;
-  background: $amber-100;
-  padding: 2px 8px;
+.metricLabel {
   font-size: 10px;
-  font-weight: 500;
-  color: $amber-700;
-  white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $sky-700;
 }
 
-.analysisCommonName {
-  margin: 0;
+.metricValue {
+  margin-top: 2px;
   font-size: 0.8125rem;
-  color: $slate-600;
+  color: $slate-700;
 }
 
 .aiDisclaimer {
@@ -312,21 +394,6 @@
   margin-top: auto;
   border-top: 1px solid $slate-100;
   padding-top: 12px;
-}
-
-.deleteButton {
-  width: 100%;
-  border-radius: $radius-md;
-  border: 1px solid $red-200;
-  background: $red-50;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: $red-600;
-
-  &:hover {
-    background: $red-100;
-  }
 }
 
 .mono {

@@ -1,0 +1,12 @@
+@use "../../../shared/styles/tokens" as *;
+
+// object-fit is set inline by the component (see PlantPhotoImage) so it
+// can't lose a specificity tie to a caller's own class.
+
+// Same neutral surface the containers already use as their empty
+// background, so a failed load reads as "nothing here" rather than an error.
+.failed {
+  position: absolute;
+  inset: 0;
+  background: $slate-100;
+}

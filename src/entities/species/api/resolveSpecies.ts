@@ -106,7 +106,7 @@ export async function resolveSpecies(
     .select(SPECIES_COLUMNS)
     .ilike("scientific_name", guess)
     .maybeSingle();
-  if (cached) return cached as unknown as Species;
+  if (cached) return repairMissingProse(supabase, cached as unknown as Species, geminiApiKey, gardenContext);
 
   const perenualRow = await tryResolveFromPerenual(supabase, guess, geminiApiKey, gardenContext);
   if (perenualRow) return perenualRow;
@@ -114,14 +114,110 @@ export async function resolveSpecies(
   return resolveWithGeminiFallback(supabase, guess, geminiApiKey, gardenContext);
 }
 
-function perenualGroundingPrompt(scientificName: string, details: PerenualSpeciesDetails, gardenContext: GardenContext): string {
+// The verified facts the grounding prompt is allowed to phrase. Kept
+// source-agnostic so the prompt can be rebuilt either from a fresh
+// Perenual response (first analysis) or from the columns already stored on
+// a cached species row (the repair path below) - the repair therefore
+// costs no extra Perenual call.
+interface ProseFacts {
+  commonName: string | null;
+  watering: string | null;
+  sunlight: string[] | null;
+  careLevel: string | null;
+  growthRate: string | null;
+  droughtTolerant: boolean | null;
+  description: string | null;
+}
+
+function factsFromPerenual(details: PerenualSpeciesDetails): ProseFacts {
+  return {
+    commonName: details.common_name ?? null,
+    watering: details.watering ?? null,
+    sunlight: details.sunlight ?? null,
+    careLevel: details.care_level ?? null,
+    growthRate: details.growth_rate ?? null,
+    droughtTolerant: details.drought_tolerant ?? null,
+    description: details.description ?? null,
+  };
+}
+
+// Used when Perenual has no match, so there are no verified facts to
+// ground on and this leans on the model's own knowledge instead.
+function geminiFallbackPrompt(scientificName: string, gardenContext: GardenContext): string {
+  return (
+    `Write a short plant-care summary for "${scientificName}". ${contextLine(gardenContext)}\n\n` +
+    `Respond with JSON: description (1-2 sentences) and care (short care ` +
+    `advice covering watering, light, and common issues) - each written ` +
+    `separately in Romanian (ro), English (en), and Russian (ru).`
+  );
+}
+
+// The prose call is fail-open: a species whose translation failed is still
+// cached (losing the identification over a failed description would be
+// worse), which used to make that failure permanent - the row is found by
+// scientific_name on every later analysis and returned as-is, so the
+// translation was never retried and the UI fell back to the raw English
+// Perenual description forever.
+//
+// So the gap is repaired on read instead. Rebuilt from the row's own
+// stored facts, so no second Perenual call. Still fail-open: if the
+// retry also fails, the caller gets the untouched cached row and the next
+// analysis simply tries again.
+async function repairMissingProse(
+  supabase: SupabaseClient,
+  species: Species,
+  geminiApiKey: string | null,
+  gardenContext: GardenContext
+): Promise<Species> {
+  if (species.fallbackDescription && species.fallbackCare) return species;
+
+  const prompt =
+    species.dataSource === "perenual"
+      ? perenualGroundingPrompt(species.scientificName, factsFromSpecies(species), gardenContext)
+      : geminiFallbackPrompt(species.scientificName, gardenContext);
+
+  const prose = await generateLocalizedProse(geminiApiKey, prompt);
+  if (!prose) return species;
+
+  const { data: updated } = await supabase
+    .from("species")
+    .update({ fallback_description: prose.description, fallback_care: prose.care })
+    .eq("id", species.id)
+    .select(SPECIES_COLUMNS)
+    .maybeSingle();
+
+  // A null here means the update matched no row - most likely the RLS
+  // repair policy isn't in place yet. Falling back to the in-memory values
+  // keeps this analysis localized even when the write didn't stick.
+  return (
+    (updated as unknown as Species) ?? {
+      ...species,
+      fallbackDescription: prose.description,
+      fallbackCare: prose.care,
+    }
+  );
+}
+
+function factsFromSpecies(species: Species): ProseFacts {
+  return {
+    commonName: species.commonName,
+    watering: species.watering,
+    sunlight: species.sunlight,
+    careLevel: species.careLevel,
+    growthRate: species.growthRate,
+    droughtTolerant: species.droughtTolerant,
+    description: species.description,
+  };
+}
+
+function perenualGroundingPrompt(scientificName: string, details: ProseFacts, gardenContext: GardenContext): string {
   const facts = [
-    details.common_name && `Common name: ${details.common_name}`,
+    details.commonName && `Common name: ${details.commonName}`,
     details.watering && `Watering: ${details.watering}`,
     details.sunlight?.length && `Sunlight: ${details.sunlight.join(", ")}`,
-    details.care_level && `Care level: ${details.care_level}`,
-    details.growth_rate && `Growth rate: ${details.growth_rate}`,
-    details.drought_tolerant != null && `Drought tolerant: ${details.drought_tolerant ? "yes" : "no"}`,
+    details.careLevel && `Care level: ${details.careLevel}`,
+    details.growthRate && `Growth rate: ${details.growthRate}`,
+    details.droughtTolerant != null && `Drought tolerant: ${details.droughtTolerant ? "yes" : "no"}`,
     details.description && `Description: ${details.description}`,
   ]
     .filter(Boolean)
@@ -152,7 +248,10 @@ async function tryResolveFromPerenual(
   if (!details) return null;
 
   const canonicalName = first.scientific_name?.[0]?.trim() || guess;
-  const prose = await generateLocalizedProse(geminiApiKey, perenualGroundingPrompt(canonicalName, details, gardenContext));
+  const prose = await generateLocalizedProse(
+    geminiApiKey,
+    perenualGroundingPrompt(canonicalName, factsFromPerenual(details), gardenContext)
+  );
 
   const { data: inserted } = await supabase
     .from("species")
@@ -178,6 +277,37 @@ async function tryResolveFromPerenual(
       description: details.description,
       fallback_description: prose?.description ?? null,
       fallback_care: prose?.care ?? null,
+      type: details.type,
+      cycle: details.cycle,
+      family: details.family,
+      genus: details.genus,
+      other_name: details.other_name,
+      origin: details.origin,
+      propagation: details.propagation,
+      dimensions: details.dimensions,
+      plant_anatomy: details.plant_anatomy,
+      pruning_count: details.pruning_count,
+      maintenance: details.maintenance,
+      flowering_season: details.flowering_season,
+      harvest_season: details.harvest_season,
+      // Only the URL is kept - the rest of default_image is licence
+      // metadata for images we don't otherwise use.
+      default_image_url:
+        details.default_image?.regular_url ?? details.default_image?.small_url ?? null,
+      salt_tolerant: details.salt_tolerant,
+      thorny: details.thorny,
+      invasive: details.invasive,
+      tropical: details.tropical,
+      indoor: details.indoor,
+      flowers: details.flowers,
+      cones: details.cones,
+      fruits: details.fruits,
+      edible_fruit: details.edible_fruit,
+      leaf: details.leaf,
+      edible_leaf: details.edible_leaf,
+      cuisine: details.cuisine,
+      medicinal: details.medicinal,
+      seeds: details.seeds,
     })
     .select(SPECIES_COLUMNS)
     .single();
@@ -200,12 +330,7 @@ async function resolveWithGeminiFallback(
   geminiApiKey: string | null,
   gardenContext: GardenContext
 ): Promise<Species | null> {
-  const prompt =
-    `Write a short plant-care summary for "${guess}". ${contextLine(gardenContext)}\n\n` +
-    `Respond with JSON: description (1-2 sentences) and care (short care ` +
-    `advice covering watering, light, and common issues) - each written ` +
-    `separately in Romanian (ro), English (en), and Russian (ru).`;
-  const prose = await generateLocalizedProse(geminiApiKey, prompt);
+  const prose = await generateLocalizedProse(geminiApiKey, geminiFallbackPrompt(guess, gardenContext));
 
   const { data: inserted } = await supabase
     .from("species")

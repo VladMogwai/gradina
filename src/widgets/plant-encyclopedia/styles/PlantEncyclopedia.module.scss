@@ -1,0 +1,62 @@
+@use "../../../shared/styles/tokens" as *;
+
+.root {
+  display: flex;
+  height: 100%;
+  height: 100dvh;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: $slate-50;
+}
+
+.appBar {
+  padding-top: env(safe-area-inset-top);
+}
+
+.inner {
+  gap: 4px;
+  padding-left: max(16px, calc(env(safe-area-inset-left) + 8px));
+  padding-right: max(16px, calc(env(safe-area-inset-right) + 8px));
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+}
+
+.statusChip {
+  margin-right: 4px;
+}
+
+.searchRow {
+  padding: 0 16px 10px;
+}
+
+// Full-width on purpose: a masonry grid wants the whole viewport, unlike
+// the centered single column the horizontal cards used to need.
+.list {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+}
+
+// flex: 1 takes all the room left under the header, so the spinner lands
+// in the true centre of the visible area. Replaces the 100vh-minus-header
+// arithmetic: no magic number, and it stays correct if the header's height
+// changes (it does - the search row wraps on narrow screens). 100vh would
+// also be wrong on mobile, where it ignores the browser chrome.
+.loadingWrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyText {
+  padding: 32px 8px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: $slate-400;
+}

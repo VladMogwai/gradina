@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createId } from "@/shared/lib/id";
 import type { PlantPhoto } from "../model/types";
 
 export const PLANT_PHOTOS_BUCKET = "plant-photos";
@@ -19,6 +20,40 @@ async function normalizeForWeb(file: File): Promise<File> {
 }
 
 const MAX_DIMENSION = 1600;
+
+// thumbhash caps at 100x100 input. Kept small on purpose - the encoded hash
+// is only ~25 bytes, so it can live on the photo row and ship with the
+// first HTML paint instead of costing a second round trip.
+const THUMBHASH_MAX = 100;
+
+// Encodes a tiny blur preview of the image, base64'd for storage in a text
+// column. Best-effort: a failure here just means that photo renders without
+// a blur-up, never that the upload fails. Takes any Blob so it serves both
+// the upload path (a File) and the backfill path (a fetched image).
+export async function encodeThumbhash(file: Blob): Promise<string | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(THUMBHASH_MAX / bitmap.width, THUMBHASH_MAX / bitmap.height, 1);
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return null;
+    }
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const { data } = ctx.getImageData(0, 0, w, h);
+    const { rgbaToThumbHash } = await import("thumbhash");
+    const hash = rgbaToThumbHash(w, h, data);
+    return btoa(String.fromCharCode(...hash));
+  } catch {
+    return null;
+  }
+}
 
 // Camera photos routinely run 10-40+MB at full resolution, which is both
 // wasteful for a 112px detail box / 44px thumbnail and prone to tripping
@@ -62,17 +97,26 @@ export async function addPlantPhoto(
   nextSortOrder: number
 ): Promise<PlantPhoto> {
   const normalized = await resizeIfNeeded(await normalizeForWeb(file));
+  const placeholder = await encodeThumbhash(normalized);
   const ext = normalized.name.split(".").pop();
-  const path = `${userId}/${plantId}-${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
+  // createId(), not crypto.randomUUID() directly: randomUUID only exists in
+  // a secure context, so on a plain-http origin (e.g. testing from a phone
+  // against http://<lan-ip>:3000) it is undefined and the upload would
+  // throw before ever reaching the network. createId falls back to a
+  // timestamp+random id there.
+  const path = `${userId}/${plantId}-${createId()}${ext ? `.${ext}` : ""}`;
+  // Every path is unique (uuid per upload) and an object is never rewritten
+  // in place, so it's safe to let clients and CDNs hold it effectively
+  // forever - a changed photo is always a new path.
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, normalized, { contentType: normalized.type });
+    .upload(path, normalized, { contentType: normalized.type, cacheControl: "31536000" });
   if (uploadError) throw uploadError;
 
   const { data, error: insertError } = await supabase
     .from("plant_photos")
-    .insert({ plant_id: plantId, storage_path: path, sort_order: nextSortOrder })
-    .select("id, sortOrder:sort_order")
+    .insert({ plant_id: plantId, storage_path: path, sort_order: nextSortOrder, placeholder })
+    .select("id, sortOrder:sort_order, placeholder")
     .single();
   if (insertError) throw insertError;
 
@@ -80,6 +124,7 @@ export async function addPlantPhoto(
     id: data.id,
     url: supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,
     sortOrder: data.sortOrder,
+    placeholder: data.placeholder,
   };
 }
 

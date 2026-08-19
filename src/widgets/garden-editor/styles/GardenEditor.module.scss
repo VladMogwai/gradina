@@ -1,22 +1,23 @@
 @use "../../../shared/styles/tokens" as *;
 
+// Full-screen, no docked side panels at any width - Library/Properties are
+// overlay Drawers, not layout siblings, so this is just [AppBar][canvas]
+// stacked, same at every breakpoint. 100dvh (not 100%/100vh) so mobile
+// browser chrome collapsing/expanding doesn't leave a gap or clip content;
+// the plain height:100% line is a fallback for engines without dvh support.
 .root {
   display: flex;
   height: 100%;
+  height: 100dvh;
   width: 100%;
   flex-direction: column;
-  background: $slate-50;
-}
-
-.body {
-  display: flex;
-  flex: 1;
-  gap: 12px;
   overflow: hidden;
-  padding: 12px;
+  background: $slate-50;
 }
 
 .canvasArea {
   min-width: 0;
+  min-height: 0;
   flex: 1;
+  overflow: hidden;
 }

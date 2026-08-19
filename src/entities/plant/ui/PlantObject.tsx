@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { fallbackColorFor } from "../model/constants";
 import type { Plant } from "../model/types";
+import { PlantPhotoImage } from "./PlantPhotoImage";
 import styles from "../styles/PlantObject.module.scss";
 
 interface PlantObjectProps {
@@ -67,8 +68,19 @@ export function PlantObject({
         }}
       />
       {plant.photos[0] && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={plant.photos[0].url} alt={plant.name} className={styles.photo} draggable={false} />
+        <PlantPhotoImage
+          src={plant.photos[0].url}
+          alt={plant.name}
+          placeholder={plant.photos[0].placeholder}
+          // Tile size follows the zoom level, so this is a rough upper
+          // bound rather than an exact width.
+          sizes="200px"
+          // contain (not cover) so the whole photo stays visible, scaled to
+          // fit the plant's current size, instead of being cropped when its
+          // aspect ratio doesn't match the tile; the color fill behind it
+          // shows through as letterboxing.
+          objectFit="contain"
+        />
       )}
       <div className={styles.label}>{dragging && !override!.valid ? t("invalidPlacement") : plant.name}</div>
       {debug && (

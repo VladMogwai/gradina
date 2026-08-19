@@ -1,0 +1,60 @@
+@use "../../../shared/styles/tokens" as *;
+
+.tile {
+  display: block;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: $slate-100;
+}
+
+// aspect-ratio is set inline from the photo's thumbhash - this is just the
+// positioning context for next/image's `fill`.
+.media {
+  position: relative;
+  width: 100%;
+}
+
+.noPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.confidence {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  height: 22px;
+  width: 22px;
+  font-size: 0.625rem;
+}
+
+.nameBar {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  border-radius: $radius-md;
+  padding: 5px 8px;
+  // Solid-ish fallback first: browsers without backdrop-filter still get a
+  // readable dark plate behind the text rather than bare text on a photo.
+  background: rgba(15, 23, 42, 0.62);
+
+  @supports (backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px)) {
+    background: rgba(15, 23, 42, 0.38);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+}
+
+.name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: $white;
+  // Keeps the text legible even where the underlay is thinnest.
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}

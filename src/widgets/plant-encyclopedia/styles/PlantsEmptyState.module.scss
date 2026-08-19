@@ -1,0 +1,16 @@
+@use "../../../shared/styles/tokens" as *;
+
+// STUB styling - deliberately minimal until the empty state gets its own
+// design pass.
+.root {
+  display: flex;
+  min-height: 40dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.text {
+  color: $slate-400;
+}

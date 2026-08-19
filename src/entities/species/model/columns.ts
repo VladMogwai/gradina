@@ -10,4 +10,10 @@ export const SPECIES_COLUMNS =
   "pestSusceptibility:pest_susceptibility, droughtTolerant:drought_tolerant, " +
   "poisonousToHumans:poisonous_to_humans, poisonousToPets:poisonous_to_pets, " +
   "careLevel:care_level, growthRate:growth_rate, description, " +
-  "fallbackDescription:fallback_description, fallbackCare:fallback_care";
+  "fallbackDescription:fallback_description, fallbackCare:fallback_care, " +
+  "type, cycle, family, genus, otherName:other_name, origin, propagation, " +
+  "dimensions, plantAnatomy:plant_anatomy, pruningCount:pruning_count, " +
+  "maintenance, floweringSeason:flowering_season, harvestSeason:harvest_season, " +
+  "defaultImageUrl:default_image_url, saltTolerant:salt_tolerant, thorny, " +
+  "invasive, tropical, indoor, flowers, cones, fruits, edibleFruit:edible_fruit, " +
+  "leaf, edibleLeaf:edible_leaf, cuisine, medicinal, seeds";

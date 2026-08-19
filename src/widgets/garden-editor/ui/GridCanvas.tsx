@@ -1,11 +1,15 @@
 import { PlantObject, type Plant } from "@/entities/plant";
 import { buildZonePathData, ZoneObject, type Zone } from "@/entities/zone";
-import type { GridSize, Rect } from "@/shared/lib/geometry";
+import { clamp, type GridSize, type Rect } from "@/shared/lib/geometry";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, type RefObject } from "react";
+import { BASE_CELL_SIZE, ZOOM_MAX, ZOOM_MIN } from "../config/constants";
 import type { DragState } from "../model/dragTypes";
 import type { EditorMode, Selection } from "../model/types";
 import styles from "../styles/GridCanvas.module.scss";
+
+const CANVAS_MARGIN = 24; // matches the inline `margin: 24` on the canvas div below
+const FIT_PADDING_CELLS = 2;
 
 interface GridCanvasProps {
   canvasRef: RefObject<HTMLDivElement | null>;
@@ -23,6 +27,8 @@ interface GridCanvasProps {
   onBeginMove: (id: string, target: "plant" | "zone", e: React.PointerEvent) => void;
   onBeginResize: (id: string, target: "plant" | "zone", e: React.PointerEvent) => void;
   onZoomDelta: (deltaY: number) => void;
+  onZoomChange: (zoom: number) => void;
+  fitSignal: number;
 }
 
 export function GridCanvas({
@@ -41,12 +47,21 @@ export function GridCanvas({
   onBeginMove,
   onBeginResize,
   onZoomDelta,
+  onZoomChange,
+  fitSignal,
 }: GridCanvasProps) {
   const t = useTranslations("Editor");
   const widthPx = grid.cols * cellSize;
   const heightPx = grid.rows * cellSize;
   const editable = mode === "edit";
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Mirrors the latest geometry into a ref so the pinch listener (attached
+  // once per gesture) reads fresh values without resubscribing mid-pinch.
+  const latest = useRef({ grid, plants, zones, cellSize });
+
+  useEffect(() => {
+    latest.current = { grid, plants, zones, cellSize };
+  }, [grid, plants, zones, cellSize]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -59,6 +74,100 @@ export function GridCanvas({
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
   }, [onZoomDelta]);
+
+  // Two-finger pinch zoom, the touch-first counterpart to the ctrl/cmd+wheel
+  // handler above. Tracks the distance between the two touch points and
+  // scales zoom relative to where the pinch started, same absolute-setter
+  // (onZoomChange) the fit-to-screen effect below uses.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let pinchStartDist: number | null = null;
+    let pinchStartZoom = 1;
+
+    function distance(touches: TouchList) {
+      const [a, b] = [touches[0], touches[1]];
+      return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+    }
+
+    function handleTouchStart(e: TouchEvent) {
+      if (e.touches.length !== 2) return;
+      pinchStartDist = distance(e.touches);
+      pinchStartZoom = latest.current.cellSize / BASE_CELL_SIZE;
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (e.touches.length !== 2 || pinchStartDist === null) return;
+      e.preventDefault();
+      const ratio = distance(e.touches) / pinchStartDist;
+      onZoomChange(clamp(Number((pinchStartZoom * ratio).toFixed(2)), ZOOM_MIN, ZOOM_MAX));
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+      if (e.touches.length < 2) pinchStartDist = null;
+    }
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    el.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+      el.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  }, [onZoomChange]);
+
+  // Fits the plants+zones bounding box (padded) into the visible viewport
+  // and centers it. Runs once on mount (fitSignal starts at 0) and again
+  // each time the caller's fit-to-screen control bumps fitSignal - it never
+  // re-runs on its own while the user is editing, so it doesn't fight a
+  // zoom/pan the user set manually via pinch.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { grid, plants, zones } = latest.current;
+    const containerW = el.clientWidth;
+    const containerH = el.clientHeight;
+    if (containerW === 0 || containerH === 0) return;
+
+    const items = [...plants, ...zones];
+    let minRow = 0;
+    let minCol = 0;
+    let maxRow = Math.min(grid.rows, 10);
+    let maxCol = Math.min(grid.cols, 10);
+    if (items.length > 0) {
+      minRow = Math.min(...items.map((i) => i.startRow));
+      minCol = Math.min(...items.map((i) => i.startCol));
+      maxRow = Math.max(...items.map((i) => i.startRow + i.height));
+      maxCol = Math.max(...items.map((i) => i.startCol + i.width));
+    }
+    minRow = Math.max(0, minRow - FIT_PADDING_CELLS);
+    minCol = Math.max(0, minCol - FIT_PADDING_CELLS);
+    maxRow = Math.min(grid.rows, maxRow + FIT_PADDING_CELLS);
+    maxCol = Math.min(grid.cols, maxCol + FIT_PADDING_CELLS);
+
+    const boxRows = Math.max(1, maxRow - minRow);
+    const boxCols = Math.max(1, maxCol - minCol);
+    const fitZoom = clamp(
+      Math.min(containerW / (boxCols * BASE_CELL_SIZE), containerH / (boxRows * BASE_CELL_SIZE)),
+      ZOOM_MIN,
+      ZOOM_MAX
+    );
+    onZoomChange(Number(fitZoom.toFixed(2)));
+
+    // Deferred a frame so cellSize/layout has caught up with the new zoom
+    // before computing where to scroll to.
+    requestAnimationFrame(() => {
+      const cs = BASE_CELL_SIZE * fitZoom;
+      el.scrollLeft = Math.max(0, minCol * cs - (containerW - boxCols * cs) / 2 + CANVAS_MARGIN);
+      el.scrollTop = Math.max(0, minRow * cs - (containerH - boxRows * cs) / 2 + CANVAS_MARGIN);
+    });
+    // Deliberately excludes grid/plants/zones/onZoomChange - this should
+    // only fire on mount and on an explicit fit request, not on every edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitSignal]);
 
   function handleCanvasClick(e: React.MouseEvent) {
     if (!editable) return;
@@ -76,7 +185,7 @@ export function GridCanvas({
         ref={canvasRef}
         onClick={handleCanvasClick}
         className={styles.canvas}
-        style={{ width: widthPx, height: heightPx, margin: 24 }}
+        style={{ width: widthPx, height: heightPx, margin: CANVAS_MARGIN }}
       >
         {/* Layer 1: zones (bottom). Overlapping zones "flow around" one
             another: the smaller zone renders solid on top, the bigger one

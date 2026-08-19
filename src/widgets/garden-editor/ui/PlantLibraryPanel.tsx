@@ -1,111 +1,33 @@
-import { fallbackColorFor, type Plant } from "@/entities/plant";
+import { PlantPhotoImage, fallbackColorFor, type Plant } from "@/entities/plant";
 import { ZONE_KIND_DEFAULT_COLOR, ZONE_KIND_LABEL_KEYS, ZONE_KINDS, type Zone, type ZoneKind } from "@/entities/zone";
-import { Modal } from "@/shared/ui/Modal";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Drawer,
+  IconButton,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import styles from "../styles/PlantLibraryPanel.module.scss";
 
 interface PlantLibraryPanelProps {
+  open: boolean;
+  onClose: () => void;
   editable: boolean;
   plants: Plant[];
   zones: Zone[];
   onBeginPlantDrag: (id: string) => void;
   onBeginZoneDrag: (id: string) => void;
-  onAddPlant: (name: string, color: string, width: number, height: number) => void;
   onAddZone: (kind: ZoneKind, label: string, color: string, width: number, height: number) => void;
   onDeletePlant: (id: string) => void;
   onDeleteZone: (id: string) => void;
-}
-
-function AddPlantModalForm({
-  onAdd,
-  onClose,
-}: {
-  onAdd: PlantLibraryPanelProps["onAddPlant"];
-  onClose: () => void;
-}) {
-  const t = useTranslations("Editor");
-  const [name, setName] = useState("");
-  const [color, setColor] = useState(fallbackColorFor("custom-plant"));
-  const [width, setWidth] = useState(1);
-  const [height, setHeight] = useState(1);
-  const [nameError, setNameError] = useState(false);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) {
-      setNameError(true);
-      return;
-    }
-    onAdd(name.trim(), color, Math.max(1, width), Math.max(1, height));
-    onClose();
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className={styles.modalForm}>
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{t("name")}</span>
-        <input
-          type="text"
-          autoFocus
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setNameError(false);
-          }}
-          placeholder={t("name")}
-          className={styles.textField}
-        />
-        {nameError && <span className={styles.fieldError}>{t("nameRequired")}</span>}
-      </label>
-
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{t("color")}</span>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className={styles.colorInputMd}
-        />
-      </label>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("sizeCells")}</span>
-        <div className={styles.sizeRow}>
-          <div className={styles.sizeInput}>
-            <input
-              type="number"
-              min={1}
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              className={styles.smallNumber}
-            />
-            <span className={styles.sizeHint}>{t("width")}</span>
-          </div>
-          <span className={styles.times}>×</span>
-          <div className={styles.sizeInput}>
-            <input
-              type="number"
-              min={1}
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-              className={styles.smallNumber}
-            />
-            <span className={styles.sizeHint}>{t("height")}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.actions}>
-        <button type="button" onClick={onClose} className={styles.secondaryButton}>
-          {t("cancel")}
-        </button>
-        <button type="submit" className={styles.primaryButton}>
-          {t("addPlant")}
-        </button>
-      </div>
-    </form>
-  );
 }
 
 function AddZoneModalForm({
@@ -140,11 +62,10 @@ function AddZoneModalForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.modalForm}>
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{t("name")}</span>
-        <input
-          type="text"
+    <form onSubmit={handleSubmit}>
+      <Stack spacing={2.5} sx={{ pt: 0.5 }}>
+        <TextField
+          label={t("name")}
           autoFocus
           value={label}
           onChange={(e) => {
@@ -152,77 +73,73 @@ function AddZoneModalForm({
             setNameError(false);
           }}
           placeholder={t(ZONE_KIND_LABEL_KEYS[kind])}
-          className={styles.textField}
+          error={nameError}
+          helperText={nameError ? t("nameRequired") : undefined}
+          size="small"
+          fullWidth
         />
-        {nameError && <span className={styles.fieldError}>{t("nameRequired")}</span>}
-      </label>
 
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{t("kind")}</span>
-        <select
+        <TextField
+          select
+          label={t("kind")}
           value={kind}
           onChange={(e) => handleKindChange(e.target.value as ZoneKind)}
-          className={styles.textField}
+          size="small"
+          fullWidth
         >
           {ZONE_KINDS.map((k) => (
-            <option key={k} value={k}>
+            <MenuItem key={k} value={k}>
               {t(ZONE_KIND_LABEL_KEYS[k])}
-            </option>
+            </MenuItem>
           ))}
-        </select>
-      </label>
+        </TextField>
 
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{t("color")}</span>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className={styles.colorInputMd}
-        />
-      </label>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+            {t("color")}
+          </Typography>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className={styles.colorInputMd}
+          />
+        </Stack>
 
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("sizeCells")}</span>
-        <div className={styles.sizeRow}>
-          <div className={styles.sizeInput}>
-            <input
-              type="number"
-              min={1}
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              className={styles.smallNumber}
-            />
-            <span className={styles.sizeHint}>{t("width")}</span>
-          </div>
-          <span className={styles.times}>×</span>
-          <div className={styles.sizeInput}>
-            <input
-              type="number"
-              min={1}
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-              className={styles.smallNumber}
-            />
-            <span className={styles.sizeHint}>{t("height")}</span>
-          </div>
-        </div>
-      </div>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
+          <TextField
+            label={t("width")}
+            type="number"
+            slotProps={{ htmlInput: { min: 1 } }}
+            value={width}
+            onChange={(e) => setWidth(Number(e.target.value))}
+            size="small"
+          />
+          <TextField
+            label={t("height")}
+            type="number"
+            slotProps={{ htmlInput: { min: 1 } }}
+            value={height}
+            onChange={(e) => setHeight(Number(e.target.value))}
+            size="small"
+          />
+        </Stack>
 
-      <div className={styles.actions}>
-        <button type="button" onClick={onClose} className={styles.secondaryButton}>
-          {t("cancel")}
-        </button>
-        <button type="submit" className={styles.primaryButton}>
-          {t("addZone")}
-        </button>
-      </div>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
+          <Button type="button" onClick={onClose} color="inherit">
+            {t("cancel")}
+          </Button>
+          <Button type="submit" variant="contained">
+            {t("addZone")}
+          </Button>
+        </Stack>
+      </Stack>
     </form>
   );
 }
 
 // Browse + select-to-drag + delete only - no inline editing. Editing a
-// plant/zone happens in the right-hand detail panel after selecting it.
+// plant/zone happens in the properties bottom sheet after selecting it.
 function PlantRow({
   plant,
   editable,
@@ -245,8 +162,15 @@ function PlantRow({
       className={`${styles.entryRow} ${editable ? styles.entryRowEditable : styles.entryRowDisabled}`}
     >
       {thumbUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumbUrl} alt="" className={styles.thumb} />
+        <div className={styles.thumbWrap}>
+          <PlantPhotoImage
+            src={thumbUrl}
+            alt=""
+            placeholder={plant.photos[0]?.placeholder}
+            sizes="32px"
+            className={styles.thumb}
+          />
+        </div>
       ) : (
         <div
           className={styles.swatch}
@@ -256,14 +180,14 @@ function PlantRow({
       <div className={styles.entryBody}>
         <div className={styles.entryName}>{plant.name}</div>
       </div>
-      <button
+      <IconButton
         onClick={onDelete}
         onPointerDown={(e) => e.stopPropagation()}
         title={t("delete")}
-        className={styles.deleteButton}
+        aria-label={t("delete")}
       >
-        ×
-      </button>
+        <CloseIcon fontSize="small" />
+      </IconButton>
     </div>
   );
 }
@@ -295,103 +219,108 @@ function ZoneRow({
         <div className={styles.entryName}>{zone.label}</div>
         <div className={styles.entryMeta}>{t(ZONE_KIND_LABEL_KEYS[zone.kind])}</div>
       </div>
-      <button
+      <IconButton
         onClick={onDelete}
         onPointerDown={(e) => e.stopPropagation()}
         title={t("delete")}
-        className={styles.deleteButton}
+        aria-label={t("delete")}
       >
-        ×
-      </button>
+        <CloseIcon fontSize="small" />
+      </IconButton>
     </div>
   );
 }
 
 export function PlantLibraryPanel({
+  open,
+  onClose,
   editable,
   plants,
   zones,
   onBeginPlantDrag,
   onBeginZoneDrag,
-  onAddPlant,
   onAddZone,
   onDeletePlant,
   onDeleteZone,
 }: PlantLibraryPanelProps) {
   const t = useTranslations("Editor");
   const [query, setQuery] = useState("");
-  const [plantModalOpen, setPlantModalOpen] = useState(false);
   const [zoneModalOpen, setZoneModalOpen] = useState(false);
   const filteredPlants = plants.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()));
   const filteredZones = zones.filter((z) => z.label.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <div className={styles.panel}>
-      <h2 className={styles.heading}>{t("library")}</h2>
-      {editable && (
-        <div className={styles.headerActions}>
-          <button onClick={() => setPlantModalOpen(true)} className={styles.headerButton}>
-            + {t("addPlant")}
-          </button>
-          <button onClick={() => setZoneModalOpen(true)} className={styles.headerButton}>
-            + {t("addZone")}
-          </button>
+    <Drawer anchor="left" open={open} onClose={onClose}>
+      <div className={styles.panel}>
+        <div className={styles.panelHeader}>
+          <h2 className={styles.heading}>{t("library")}</h2>
+          <IconButton onClick={onClose} title={t("close")} aria-label={t("close")}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </div>
-      )}
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={`${t("search")}…`}
-        className={styles.searchInput}
-      />
-      <div className={styles.scrollArea}>
-        <div>
-          <h3 className={styles.sectionHeading}>{t("plants")}</h3>
-          <div className={styles.list}>
-            {filteredPlants.map((p) => (
-              <PlantRow
-                key={p.id}
-                plant={p}
-                editable={editable}
-                onBeginDrag={() => onBeginPlantDrag(p.id)}
-                onDelete={() => onDeletePlant(p.id)}
-              />
-            ))}
-            {plants.length === 0 && <p className={styles.noMatches}>{t("noPlantsYet")}</p>}
-            {plants.length > 0 && filteredPlants.length === 0 && (
-              <p className={styles.noMatches}>{t("noMatches")}</p>
-            )}
+        {editable && (
+          <div className={styles.headerActions}>
+            <Button onClick={() => setZoneModalOpen(true)} size="small" variant="outlined">
+              + {t("addZone")}
+            </Button>
           </div>
-        </div>
+        )}
+        <TextField
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`${t("search")}…`}
+          size="small"
+          fullWidth
+          sx={{ mb: 1.5 }}
+        />
+        <div className={styles.scrollArea}>
+          <div>
+            <h3 className={styles.sectionHeading}>{t("plants")}</h3>
+            <div className={styles.list}>
+              {filteredPlants.map((p) => (
+                <PlantRow
+                  key={p.id}
+                  plant={p}
+                  editable={editable}
+                  onBeginDrag={() => onBeginPlantDrag(p.id)}
+                  onDelete={() => onDeletePlant(p.id)}
+                />
+              ))}
+              {plants.length === 0 && <p className={styles.noMatches}>{t("noPlantsYet")}</p>}
+              {plants.length > 0 && filteredPlants.length === 0 && (
+                <p className={styles.noMatches}>{t("noMatches")}</p>
+              )}
+            </div>
+          </div>
 
-        <div>
-          <h3 className={styles.sectionHeading}>{t("zones")}</h3>
-          <div className={styles.list}>
-            {filteredZones.map((z) => (
-              <ZoneRow
-                key={z.id}
-                zone={z}
-                editable={editable}
-                onBeginDrag={() => onBeginZoneDrag(z.id)}
-                onDelete={() => onDeleteZone(z.id)}
-              />
-            ))}
-            {zones.length === 0 && <p className={styles.noMatches}>{t("noZonesYet")}</p>}
-            {zones.length > 0 && filteredZones.length === 0 && (
-              <p className={styles.noMatches}>{t("noMatches")}</p>
-            )}
+          <div>
+            <h3 className={styles.sectionHeading}>{t("zones")}</h3>
+            <div className={styles.list}>
+              {filteredZones.map((z) => (
+                <ZoneRow
+                  key={z.id}
+                  zone={z}
+                  editable={editable}
+                  onBeginDrag={() => onBeginZoneDrag(z.id)}
+                  onDelete={() => onDeleteZone(z.id)}
+                />
+              ))}
+              {zones.length === 0 && <p className={styles.noMatches}>{t("noZonesYet")}</p>}
+              {zones.length > 0 && filteredZones.length === 0 && (
+                <p className={styles.noMatches}>{t("noMatches")}</p>
+              )}
+            </div>
           </div>
         </div>
+        <p className={styles.footerNote}>{t("libraryPrototypeNote")}</p>
       </div>
-      <p className={styles.footerNote}>{t("libraryPrototypeNote")}</p>
 
-      <Modal open={plantModalOpen} onClose={() => setPlantModalOpen(false)} title={t("addPlant")}>
-        <AddPlantModalForm onAdd={onAddPlant} onClose={() => setPlantModalOpen(false)} />
-      </Modal>
-      <Modal open={zoneModalOpen} onClose={() => setZoneModalOpen(false)} title={t("addZone")}>
-        <AddZoneModalForm onAdd={onAddZone} onClose={() => setZoneModalOpen(false)} />
-      </Modal>
-    </div>
+      <Dialog open={zoneModalOpen} onClose={() => setZoneModalOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t("addZone")}</DialogTitle>
+        <DialogContent>
+          <AddZoneModalForm onAdd={onAddZone} onClose={() => setZoneModalOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </Drawer>
   );
 }
